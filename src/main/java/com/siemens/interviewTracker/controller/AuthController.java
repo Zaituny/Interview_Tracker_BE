@@ -30,4 +30,10 @@ public class AuthController {
         User createdUser = authService.signup(userDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(userMapper.userToUserDTO(createdUser));
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException ex) {
+        logger.warn("Signup failed: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+    }
 }
