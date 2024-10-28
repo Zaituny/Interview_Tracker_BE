@@ -2,10 +2,13 @@ package com.siemens.interviewTracker.service;
 
 import java.util.Set;
 import java.util.UUID;
+
+import com.siemens.interviewTracker.mapper.UserMapper;
 import jakarta.validation.Validator;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import jakarta.validation.ConstraintViolation;
 import org.springframework.stereotype.Service;

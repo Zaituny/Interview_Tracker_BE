@@ -13,3 +13,4 @@ public interface UserMapper {
     // Mapping from UserDTO to User entity
     User userDTOToUser(UserDTO userDTO);
 }
+
