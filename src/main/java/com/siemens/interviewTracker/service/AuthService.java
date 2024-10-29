@@ -21,7 +21,7 @@ public class AuthService {
     private UserRepository userRepository;
 
     @Autowired
-    private UserService userService;  // Inject UserService for additional user-related operations
+    private UserService userService;
 
     public String forgotPass(String email){
         Optional<User> userOptional = userRepository.findByEmail(email);
@@ -42,19 +42,14 @@ public class AuthService {
         return "Password reset token was sent to your email";
     }
 
-    public String resetPass(String token, String password) {
-        Optional<User> userOptional = userRepository.findByPasswordToken(token);
+    public String resetPass(String email, String password) {
+        Optional<User> userOptional = userRepository.findByEmail(email);
 
         if (!userOptional.isPresent()) {
-            return "Invalid token";
+            return "Invalid email";
         }
 
         UserDTO userDTO = userMapper.userToUserDTO(userOptional.get());
-
-        // Check if the token has expired
-        if (isTokenExpired(userDTO.getPasswordTokenDate())) {
-            return "Token expired.";
-        }
 
         userDTO.setPassword(password);
         userDTO.setPasswordToken(null);
@@ -67,12 +62,22 @@ public class AuthService {
         return "Your password was successfully updated.";
     }
 
+    public boolean validateToken(String email , String token) {
+        Optional<User> userOptional = userRepository.findByEmail(email);
 
+        if (!userOptional.isPresent()) {
+            return false;
+        }
+
+        UserDTO userDTO = userMapper.userToUserDTO(userOptional.get());
+        if(token.equals(userDTO.getPasswordToken()) && !isTokenExpired(userDTO.getPasswordTokenDate())){
+            return true;
+        }
+        return false;
+    }
     private String generateToken() {
-        StringBuilder token = new StringBuilder();
-
-        return token.append(UUID.randomUUID().toString())
-                .append(UUID.randomUUID().toString()).toString();
+        int code = (int) (Math.random() * 90000) + 10000; // Generates a random 5-digit number
+        return String.valueOf(code);
     }
 
     private boolean isTokenExpired(final LocalDateTime tokenCreationDate) {
