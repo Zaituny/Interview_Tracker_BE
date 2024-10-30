@@ -43,6 +43,7 @@ public class AuthController {
     @PostMapping("/forgot-password")
     public ResponseEntity<String> forgotPassword(@RequestParam String email) {
         String response = authService.forgotPass(email);
+//        System.out
         if (response.equals("Invalid email id.")) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("The provided email address is not associated with any account.");

@@ -50,10 +50,16 @@ public class AuthService {
             throw new IllegalArgumentException("Validation errors: " + violations);
         }
         validateRawPassword(userDTO.getPassword());
+
+        // Map DTO to Entity
         User user = userMapper.userDTOToUser(userDTO);
+        user.setId( UUID.randomUUID());
         user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+
+        // Save the user (ID will be automatically set)
         return userRepository.save(user);
     }
+
     private void validateRawPassword(String rawPassword) {
         if (rawPassword.length() < 8 || rawPassword.length() > 49) {
             throw new IllegalArgumentException("Password must be between 8 and 49 characters");
@@ -75,7 +81,7 @@ public class AuthService {
         userDTO.setPasswordTokenDate(LocalDateTime.now());
 
         User updatedUser = userMapper.userDTOToUser(userDTO);
-        userService.updateUser(updatedUser.getId() , updatedUser);
+        userRepository.save(updatedUser);
 
         // logic to send email
         String subject = "Password Reset Request";

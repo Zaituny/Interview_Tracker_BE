@@ -15,7 +15,6 @@ import jakarta.validation.constraints.*;
 public class User {
 
     @Id
-    @GeneratedValue
     @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
 
