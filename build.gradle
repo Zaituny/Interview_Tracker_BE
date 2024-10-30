@@ -9,7 +9,7 @@ version = '0.0.1-SNAPSHOT'
 
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(19)
+		languageVersion = JavaLanguageVersion.of(23)
 	}
 }
 
@@ -40,8 +40,14 @@ dependencies {
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0'
 	implementation 'org.mapstruct:mapstruct:1.6.2'
 	annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.2'
+	implementation 'org.springframework.boot:spring-boot-starter-mail:1.2.0.RELEASE'
+	implementation 'jakarta.mail:jakarta.mail-api:2.1.3'
+
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
+	implementation 'org.mapstruct:mapstruct:1.6.2'
+	annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.2'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0'
 }
