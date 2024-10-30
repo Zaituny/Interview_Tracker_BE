@@ -17,6 +17,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final Validator validator;
     private final UserMapper userMapper;
+    private final static String PASSWORD_REGEX ="^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,100}$";
 
     public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, Validator validator, UserMapper userMapper) {
         this.userRepository = userRepository;
@@ -38,7 +39,7 @@ public class AuthService {
         validateRawPassword(userDTO.getPassword());
 
         User user = userMapper.userDTOToUser(userDTO);
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
 
         return userRepository.save(user);
     }
@@ -47,7 +48,7 @@ public class AuthService {
         if (rawPassword.length() < 8 || rawPassword.length() > 49) {
             throw new IllegalArgumentException("Password must be between 8 and 49 characters");
         }
-        if (!rawPassword.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,100}$")) {
+        if (!rawPassword.matches(PASSWORD_REGEX)) {
             throw new IllegalArgumentException("Password must contain at least one uppercase, lowercase, number, and special character");
         }
     }
