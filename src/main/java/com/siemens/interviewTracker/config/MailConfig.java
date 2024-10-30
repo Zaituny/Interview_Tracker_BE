@@ -28,15 +28,29 @@ public class MailConfig {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         mailSender.setHost(mailHost);
         mailSender.setPort(mailPort);
-
         mailSender.setUsername(mailUsername);
         mailSender.setPassword(mailPassword);
 
         Properties props = mailSender.getJavaMailProperties();
+
+        // General mail properties
         props.put("mail.transport.protocol", "smtp");
         props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", "true");
-        props.put("mail.debug", "false");
+
+        // TLS/SSL configuration based on port number
+        if (mailPort == 587) {  // STARTTLS (Explicit SSL/TLS)
+            props.put("mail.smtp.starttls.enable", "true");
+            props.put("mail.smtp.ssl.protocols", "TLSv1.2");
+        } else if (mailPort == 465) {  // SSL (Implicit SSL/TLS)
+            props.put("mail.smtp.ssl.enable", "true");
+            props.put("mail.smtp.ssl.protocols", "TLSv1.2");
+            props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+            props.put("mail.smtp.socketFactory.port", "465");
+            props.put("mail.smtp.ssl.checkserveridentity", "true");
+        }
+
+        // Enable mail debugging (optional, can be removed after troubleshooting)
+        props.put("mail.debug", "true");
 
         return mailSender;
     }

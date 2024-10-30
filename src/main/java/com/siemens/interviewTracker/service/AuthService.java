@@ -23,7 +23,7 @@ public class AuthService {
     private final Validator validator;
     private final UserMapper userMapper;
     private final UserService userService; // Changed to final
-    private final EmailService emailService; // Changed to final
+    private final SendGridEmailService emailService; // Changed to final
     private final static String PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,100}$";
 
     // Constructor Injection
@@ -33,7 +33,7 @@ public class AuthService {
                        Validator validator,
                        UserMapper userMapper,
                        UserService userService,
-                       EmailService emailService) {
+                       SendGridEmailService emailService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.validator = validator;
@@ -86,7 +86,7 @@ public class AuthService {
         // logic to send email
         String subject = "Password Reset Request";
         String body = "Your password reset token is: " + token;
-        emailService.sendSimpleEmail(email, subject, body);
+        emailService.sendEmail(email, subject, body);
 
         return "Password reset token was sent to your email";
     }
@@ -106,7 +106,7 @@ public class AuthService {
 
         // Convert UserDTO back to User entity and save to the database
         User updatedUser = userMapper.userDTOToUser(userDTO);
-        userService.updateUser(updatedUser.getId() , updatedUser);
+        userRepository.save(updatedUser);
 
         return "Your password was successfully updated.";
     }
