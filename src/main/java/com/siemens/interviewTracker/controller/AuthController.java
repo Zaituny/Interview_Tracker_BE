@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/v0/auth")
 public class AuthController {
 
     private final AuthService authService;
@@ -26,7 +26,6 @@ public class AuthController {
         this.userMapper = userMapper;
     }
 
-
     @PostMapping("/signup")
     public ResponseEntity<UserDTO> signup(@Valid @RequestBody UserDTO userDTO) {
         logger.info("Signing up user with email: {}", userDTO.getEmail());
@@ -37,6 +36,20 @@ public class AuthController {
     public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException ex) {
         logger.warn("Signup failed: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestParam String email, @RequestParam String password) {
+        logger.info("Logging in user with email: {}", email);
+        String token = authService.login(email, password);
+        return ResponseEntity.ok(token);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(@RequestParam String token) {
+        logger.info("Logging out user with token: {}", token);
+        authService.logout(token);
+        return ResponseEntity.ok("Successfully logged out");
     }
 
     // Endpoint for forgot password, which generates and sends the reset token

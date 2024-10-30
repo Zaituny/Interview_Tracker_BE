@@ -9,11 +9,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import jakarta.validation.Validator;
 import jakarta.validation.ConstraintViolation;
-import java.util.Set;
+
+import java.util.*;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -25,6 +24,7 @@ public class AuthService {
     private final UserService userService;
     private final SendGridEmailService emailService;
     private final static String PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,100}$";
+    private final Map<String, String> tokenStore = new HashMap<>();
 
     // Constructor Injection
     @Autowired
@@ -41,6 +41,7 @@ public class AuthService {
         this.userService = userService;
         this.emailService = emailService;
     }
+
     public User signup(UserDTO userDTO) {
         if (userRepository.findByEmail(userDTO.getEmail()).isPresent()) {
             throw new IllegalArgumentException("User already exists");
@@ -58,6 +59,25 @@ public class AuthService {
 
         // Save the user (ID will be automatically set)
         return userRepository.save(user);
+    }
+
+    public String login(String email, String password) {
+        Optional<User> userOptional = userRepository.findByEmail(email);
+        if (userOptional.isEmpty() || !passwordEncoder.matches(password, userOptional.get().getPassword())) {
+            throw new IllegalArgumentException("Invalid email or password");
+        }
+
+        String token = generateToken(userOptional.get().getId().toString());
+        tokenStore.put(token, email);
+        return token;
+    }
+
+    public void logout(String token) {
+        tokenStore.remove(token);
+    }
+
+    private String generateToken(String userId) {
+        return UUID.randomUUID().toString();
     }
 
     private void validateRawPassword(String rawPassword) {
