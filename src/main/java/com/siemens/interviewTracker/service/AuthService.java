@@ -23,6 +23,9 @@ public class AuthService {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private EmailService emailService;
+
     public String forgotPass(String email){
         Optional<User> userOptional = userRepository.findByEmail(email);
 
@@ -31,13 +34,17 @@ public class AuthService {
         }
 
         UserDTO userDTO = userMapper.userToUserDTO(userOptional.get());
-        userDTO.setPasswordToken(generateToken());
+        String token = generateToken();
+        userDTO.setPasswordToken(token);
         userDTO.setPasswordTokenDate(LocalDateTime.now());
 
         User updatedUser = userMapper.userDTOToUser(userDTO);
         userService.updateUser(updatedUser.getId() , updatedUser);
 
         // logic to send email
+        String subject = "Password Reset Request";
+        String body = "Your password reset token is: " + token;
+        emailService.sendSimpleEmail(email, subject, body);
 
         return "Password reset token was sent to your email";
     }
