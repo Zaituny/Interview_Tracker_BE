@@ -22,20 +22,24 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final Validator validator;
     private final UserMapper userMapper;
-    private final static String PASSWORD_REGEX ="^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,100}$";
+    private final UserService userService; // Changed to final
+    private final EmailService emailService; // Changed to final
+    private final static String PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,100}$";
 
-
+    // Constructor Injection
     @Autowired
-    private UserService userService;
-
-    @Autowired
-    private EmailService emailService;
-
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, Validator validator, UserMapper userMapper) {
+    public AuthService(UserRepository userRepository,
+                       PasswordEncoder passwordEncoder,
+                       Validator validator,
+                       UserMapper userMapper,
+                       UserService userService,
+                       EmailService emailService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.validator = validator;
         this.userMapper = userMapper;
+        this.userService = userService;
+        this.emailService = emailService;
     }
     public User signup(UserDTO userDTO) {
         if (userRepository.findByEmail(userDTO.getEmail()).isPresent()) {

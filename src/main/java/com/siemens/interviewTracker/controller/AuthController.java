@@ -25,6 +25,8 @@ public class AuthController {
         this.authService = authService;
         this.userMapper = userMapper;
     }
+
+
     @PostMapping("/signup")
     public ResponseEntity<UserDTO> signup(@Valid @RequestBody UserDTO userDTO) {
         logger.info("Signing up user with email: {}", userDTO.getEmail());
