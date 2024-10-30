@@ -22,8 +22,8 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final Validator validator;
     private final UserMapper userMapper;
-    private final UserService userService; // Changed to final
-    private final SendGridEmailService emailService; // Changed to final
+    private final UserService userService;
+    private final SendGridEmailService emailService;
     private final static String PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,100}$";
 
     // Constructor Injection
