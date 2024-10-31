@@ -120,7 +120,7 @@ public class AuthService {
 
         UserDTO userDTO = userMapper.userToUserDTO(userOptional.get());
 
-        userDTO.setPassword(password);
+        userDTO.setPassword(passwordEncoder.encode(password));
         userDTO.setPasswordToken(null);
         userDTO.setPasswordTokenDate(null);
 
@@ -139,7 +139,7 @@ public class AuthService {
         }
 
         UserDTO userDTO = userMapper.userToUserDTO(userOptional.get());
-        if(token.equals(userDTO.getPasswordToken()) && !isTokenExpired(userDTO.getPasswordTokenDate())){
+        if(token.equals(userDTO.getPasswordToken()) && isTokenExpired(userDTO.getPasswordTokenDate())){
             return true;
         }
         return false;
