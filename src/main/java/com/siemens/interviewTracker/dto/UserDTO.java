@@ -1,5 +1,6 @@
 package com.siemens.interviewTracker.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import jakarta.validation.constraints.Email;
@@ -12,6 +13,8 @@ import java.util.UUID;
 @Getter
 @Setter
 public class UserDTO {
+
+    @JsonIgnore
     private UUID id;
 
     @Email
@@ -25,6 +28,9 @@ public class UserDTO {
     @NotBlank(message = "Password cannot be empty")
     private String password;
 
+    @JsonIgnore
     private String passwordToken;
+
+    @JsonIgnore
     private LocalDateTime passwordTokenDate;
 }
