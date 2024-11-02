@@ -1,19 +1,19 @@
 package com.siemens.interviewTracker.service;
 
-import com.siemens.interviewTracker.controller.AuthController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
+
 
 @Service
 public class EmailService {
 
     private final JavaMailSender mailSender;
-    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
+    private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
 
     @Value("${spring.mail.username}")
     private String fromEmail;
@@ -36,6 +36,4 @@ public class EmailService {
             logger.error("Failed to send email: ", e);
         }
     }
-
-
 }
