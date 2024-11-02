@@ -7,14 +7,15 @@ import org.slf4j.LoggerFactory;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import com.siemens.interviewTracker.entity.User;
+import com.siemens.interviewTracker.dto.UserDTO;
 import org.springframework.web.bind.annotation.*;
 import com.siemens.interviewTracker.service.UserService;
 import org.springframework.validation.annotation.Validated;
 
+
+@Validated
 @RestController
 @RequestMapping("/api/v0/users")
-@Validated
 public class UserController {
 
     private final UserService userService;
@@ -25,17 +26,17 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<User> createUser(@Valid @RequestBody User user) {
-        logger.info("Creating user with email: {}", user.getEmail());
-        User createdUser = userService.createUser(user);
+    public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserDTO userDTO) {
+        logger.info("Creating user with email: {}", userDTO.getEmail());
+        UserDTO createdUser = userService.createUser(userDTO);
         logger.info("User created with ID: {}", createdUser.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
     }
 
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers(@RequestParam(defaultValue = "0") int offset,
-                                                  @RequestParam(defaultValue = "10") int limit) {
-        logger.info("Fetching users with offset: {}, limit: {}", offset, limit);
+    public ResponseEntity<List<UserDTO>> getAllUsers(@RequestParam(defaultValue = "10") int limit,
+                                                     @RequestParam(defaultValue = "0") int offset) {
+        logger.info("Fetching users with limit: {}, offset: {}", limit, offset);
         if (limit <= 0 || limit > 100) {
             throw new IllegalArgumentException("Limit must be between 1 and 100.");
         }
@@ -43,21 +44,21 @@ public class UserController {
             throw new IllegalArgumentException("Offset must be non-negative.");
         }
 
-        List<User> users = userService.getAllUsers(limit, offset).getContent();
+        List<UserDTO> users = userService.getAllUsers(limit, offset).getContent();
         return ResponseEntity.ok(users);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable UUID id) {
+    public ResponseEntity<UserDTO> getUserById(@PathVariable UUID id) {
         logger.info("Fetching user with ID: {}", id);
-        User user = userService.getUserById(id);
+        UserDTO user = userService.getUserById(id);
         return ResponseEntity.ok(user);
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable UUID id, @RequestBody User user) {
+    public ResponseEntity<UserDTO> updateUser(@PathVariable UUID id, @RequestBody UserDTO userDTO) {
         logger.info("Updating user with ID: {}", id);
-        User updatedUser = userService.updateUser(id, user);
+        UserDTO updatedUser = userService.updateUser(id, userDTO);
         return ResponseEntity.ok(updatedUser);
     }
 
