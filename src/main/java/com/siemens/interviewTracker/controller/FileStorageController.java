@@ -43,6 +43,10 @@ public class FileStorageController {
     public ResponseEntity<String> uploadCv(
             @RequestParam("file")
             @Valid MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            logger.error("No file provided or file is empty");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No file provided or file is empty");
+        }
         try {
             logger.info("Uploading file: " + file.getOriginalFilename());
             String filePath = fileStorageService.saveFile(file);
@@ -51,9 +55,6 @@ public class FileStorageController {
             logger.error("Error saving the CV file", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error saving the CV: " + e.getMessage());
-        } catch (NullPointerException e) {
-            logger.error("No file provided", e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No file provided");
         }
     }
 }

@@ -21,6 +21,11 @@ public class FileStorageService {
             throw new NullPointerException("fileToSave is null");
         }
 
+        // validate file tpe 
+        if (!"application/pdf".equals(fileToSave.getContentType())) {
+            throw new IllegalArgumentException("Invalid file format. Only PDF files are allowed.");
+        }
+
         // Ensure the storage directory exists; if not, create it
         Path storageDirPath = Path.of(STORAGE_DIRECTORY);
         if (!Files.exists(storageDirPath)) {
