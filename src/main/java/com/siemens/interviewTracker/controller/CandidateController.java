@@ -18,7 +18,7 @@ import java.util.UUID;
 @RequestMapping("/api/v0/candidates")
 public class CandidateController {
     private final CandidateService candidateService;
-    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
+    private static final Logger logger = LoggerFactory.getLogger(CandidateController.class);
     public CandidateController(CandidateService candidateService) {
         this.candidateService = candidateService;
     }
