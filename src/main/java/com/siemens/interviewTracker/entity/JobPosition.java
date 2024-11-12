@@ -32,20 +32,10 @@ public class JobPosition {
     @Column(name = "status")
     private String status;
 
-    @ElementCollection
-    @CollectionTable(
-            name = "job_position_requirements",
-            joinColumns = @JoinColumn(name = "job_position_id")
-    )
     @Column(name = "requirements")
-    private List<String> requirements;
+    private String requirements;
 
-    @ElementCollection
-    @CollectionTable(
-            name = "job_position_responsibilities",
-            joinColumns = @JoinColumn(name = "job_position_id")
-    )
     @Column(name = "responsibilities")
-    private List<String> responsibilities;
+    private String responsibilities;
 
 }

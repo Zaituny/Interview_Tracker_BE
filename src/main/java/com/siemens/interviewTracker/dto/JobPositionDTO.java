@@ -6,7 +6,6 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -24,8 +23,8 @@ public class JobPositionDTO {
 
     private String status;
 
-    private List<String> requirements;
+    private String requirements;
 
-    private List<String> responsibilities;
+    private String responsibilities;
 
 }
