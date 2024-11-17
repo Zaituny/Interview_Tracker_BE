@@ -20,7 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 
 @RestController
-@SecurityRequirement(name = "bearerAuth")
 @RequestMapping("/api/cvs")
 public class FileStorageController {
     private final FileStorageService fileStorageService;

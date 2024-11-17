@@ -1,7 +1,10 @@
 package com.siemens.interviewTracker.entity;
 
+import jakarta.validation.constraints.Email;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.time.LocalDateTime;
 import java.util.UUID;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -22,10 +25,14 @@ public class InterviewProcess {
     @Column(name = "title")
     private String title;
 
+    @Enumerated(EnumType.STRING) // Save as a string in the database
     @Column(name = "status")
-    private String status;
+    private InterviewProcessStatus status;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "job_position_id", nullable = false)
-    private JobPosition jobPosition;
+    @Email
+    @Column(name = "created_by")
+    private String createdBy;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 }

@@ -1,5 +1,6 @@
 package com.siemens.interviewTracker.service;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 import org.slf4j.Logger;
@@ -11,12 +12,12 @@ import jakarta.validation.ConstraintViolation;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
-import com.siemens.interviewTracker.entity.JobPosition;
 import com.siemens.interviewTracker.dto.InterviewProcessDTO;
 import com.siemens.interviewTracker.entity.InterviewProcess;
 import com.siemens.interviewTracker.mapper.InterviewProcessMapper;
-import com.siemens.interviewTracker.repository.JobPositionRepository;
 import com.siemens.interviewTracker.repository.InterviewProcessRepository;
+
+import static com.siemens.interviewTracker.entity.InterviewProcessStatus.*;
 import static com.siemens.interviewTracker.utils.ValidationUtils.getValidationErrors;
 
 
@@ -26,18 +27,15 @@ public class InterviewProcessService {
     private final Validator validator;
     private final InterviewProcessMapper interviewProcessMapper;
     private final InterviewProcessRepository interviewProcessRepository;
-    private final JobPositionRepository jobPositionRepository;
     private static final Logger logger = LoggerFactory.getLogger(InterviewProcessService.class);
 
     public InterviewProcessService(
             Validator validator,
             InterviewProcessMapper interviewProcessMapper,
-            InterviewProcessRepository interviewProcessRepository,
-            JobPositionRepository jobPositionRepository) {
+            InterviewProcessRepository interviewProcessRepository) {
         this.validator = validator;
         this.interviewProcessMapper = interviewProcessMapper;
         this.interviewProcessRepository = interviewProcessRepository;
-        this.jobPositionRepository = jobPositionRepository;
     }
 
     public InterviewProcessDTO createInterviewProcess(InterviewProcessDTO interviewProcessDTO) {
@@ -47,17 +45,17 @@ public class InterviewProcessService {
             throw new IllegalArgumentException("InterviewProcess cannot be null");
         }
 
+        interviewProcessDTO.setCreatedAt(LocalDateTime.now());
+        interviewProcessDTO.setStatus(NOT_STARTED_YET);
+
         Set<ConstraintViolation<InterviewProcessDTO>> violations = validator.validate(interviewProcessDTO);
         if (!violations.isEmpty()) {
             logger.error("Validation errors: {}", getValidationErrors(violations));
             throw new IllegalArgumentException("Validation errors: " + getValidationErrors(violations));
         }
 
-        JobPosition jobPosition = jobPositionRepository.findById(interviewProcessDTO.getJobPositionId())
-                .orElseThrow(() -> new IllegalArgumentException("JobPosition not found"));
 
         InterviewProcess interviewProcess = interviewProcessMapper.interviewProcessDTOToInterviewProcess(interviewProcessDTO);
-        interviewProcess.setJobPosition(jobPosition);
 
         InterviewProcess savedInterviewProcess = interviewProcessRepository.save(interviewProcess);
         logger.info("Interview process created with ID: {}", savedInterviewProcess.getId());
@@ -107,11 +105,6 @@ public class InterviewProcessService {
                         existingInterviewProcess.setStatus(interviewProcessDTO.getStatus());
                     }
 
-                    if (interviewProcessDTO.getJobPositionId() != null) {
-                        JobPosition jobPosition = jobPositionRepository.findById(interviewProcessDTO.getJobPositionId())
-                                .orElseThrow(() -> new IllegalArgumentException("JobPosition not found"));
-                        existingInterviewProcess.setJobPosition(jobPosition);
-                    }
 
                     return interviewProcessRepository.save(existingInterviewProcess);
                 })
