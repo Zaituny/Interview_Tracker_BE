@@ -62,4 +62,7 @@ public class Candidate {
         this.interviewProcesses.remove(interviewProcess);
         interviewProcess.getCandidates().remove(this);
     }
+
+    @ManyToMany(mappedBy = "candidates")
+    private Set<InterviewStage> interviewStages = new HashSet<>();
 }

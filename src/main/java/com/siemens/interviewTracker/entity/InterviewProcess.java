@@ -27,7 +27,7 @@ public class InterviewProcess {
     private String title;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
+    @Column(name = "status")
     private InterviewProcessStatus status;
 
     @Email
@@ -35,7 +35,7 @@ public class InterviewProcess {
     @Column(name = "created_by", nullable = false)
     private String createdBy;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @ManyToMany
@@ -45,6 +45,9 @@ public class InterviewProcess {
             inverseJoinColumns = @JoinColumn(name = "candidate_id")
     )
     private Set<Candidate> candidates = new HashSet<>();
+
+    @OneToMany(mappedBy = "interviewProcess")
+    private Set<InterviewStage> interviewStages = new HashSet<>();
 
     // Helper methods
     public void addCandidate(Candidate candidate) {
