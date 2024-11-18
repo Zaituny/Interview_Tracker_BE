@@ -71,4 +71,11 @@ public class InterviewProcessController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/add-candidate")
+    public ResponseEntity<String> addCandidateToProcess(@RequestParam UUID candidateId, @RequestParam UUID processId) {
+        logger.info("adding candidate with ID: {}", candidateId);
+        interviewProcessService.addCandidateToProcess(candidateId, processId);
+        return ResponseEntity.ok("Candidate added to process successfully.");
+    }
+
 }

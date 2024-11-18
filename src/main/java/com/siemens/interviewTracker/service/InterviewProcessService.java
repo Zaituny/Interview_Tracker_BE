@@ -140,26 +140,24 @@ public class InterviewProcessService {
         logger.info("Interview process deleted with ID: {}", id);
     }
 
-    @Transactional
-    public CandidateDTO createCandidateAndAddToProcess(CandidateDTO candidateDTO, UUID processId) {
-        // Create new candidate from DTO
-        Candidate candidate = candidateMapper.toEntity(candidateDTO);
+    public void addCandidateToProcess(UUID candidateId, UUID processId) {
+        // Fetch Candidate and InterviewProcess entities by their IDs
+        Candidate candidate = candidateRepository.findById(candidateId)
+                .orElseThrow(() -> new RuntimeException("Candidate not found with id: " + candidateId));
 
-        // Fetch InterviewProcess by processId
         InterviewProcess interviewProcess = interviewProcessRepository.findById(processId)
-                .orElseThrow(() -> new IllegalArgumentException("Interview process not found"));
+                .orElseThrow(() -> new RuntimeException("InterviewProcess not found with id: " + processId));
 
-        // Add candidate to the interview process
-        interviewProcess.addCandidate(candidate);
+        // Add Candidate to InterviewProcess
+        interviewProcess.getCandidates().add(candidate);
 
-        // Persist the candidate and update the interview process
+        // Add InterviewProcess to Candidate
+        candidate.getInterviewProcesses().add(interviewProcess);
+
+        // Save both entities to persist the relationship
         candidateRepository.save(candidate);
         interviewProcessRepository.save(interviewProcess);
-
-        // Convert saved candidate to DTO and return
-        return candidateMapper.toDTO(candidate);
     }
-
 
 
 }
