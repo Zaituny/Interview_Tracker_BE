@@ -2,6 +2,8 @@ package com.siemens.interviewTracker.controller;
 
 import java.util.List;
 import java.util.UUID;
+
+import com.siemens.interviewTracker.dto.CandidateDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import jakarta.validation.Valid;
@@ -67,5 +69,15 @@ public class InterviewProcessController {
         logger.info("Deleting interview process with ID: {}", id);
         interviewProcessService.deleteInterviewProcess(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/candidates/{processId}")
+    public ResponseEntity<InterviewProcessDTO> createCandidateAndAddToProcess(
+            @PathVariable UUID processId,
+            @Valid @RequestBody CandidateDTO candidateDTO) {
+        logger.info("Creating candidate and adding to interview process with ID: {}", processId);
+        InterviewProcessDTO updatedInterviewProcess = interviewProcessService.createCandidateAndAddToProcess(candidateDTO, processId);
+        logger.info("Candidate added to interview process with ID: {}", processId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(updatedInterviewProcess);
     }
 }

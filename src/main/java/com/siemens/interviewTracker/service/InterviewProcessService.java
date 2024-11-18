@@ -3,6 +3,11 @@ package com.siemens.interviewTracker.service;
 import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
+
+import com.siemens.interviewTracker.dto.CandidateDTO;
+import com.siemens.interviewTracker.entity.Candidate;
+import com.siemens.interviewTracker.mapper.CandidateMapper;
+import com.siemens.interviewTracker.repository.CandidateRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import jakarta.validation.Validator;
@@ -27,15 +32,23 @@ public class InterviewProcessService {
     private final Validator validator;
     private final InterviewProcessMapper interviewProcessMapper;
     private final InterviewProcessRepository interviewProcessRepository;
+    private final CandidateRepository candidateRepository;
+    private final CandidateMapper candidateMapper;
     private static final Logger logger = LoggerFactory.getLogger(InterviewProcessService.class);
+
+
 
     public InterviewProcessService(
             Validator validator,
             InterviewProcessMapper interviewProcessMapper,
-            InterviewProcessRepository interviewProcessRepository) {
+            InterviewProcessRepository interviewProcessRepository,
+            CandidateRepository candidateRepository,
+            CandidateMapper candidateMapper) {
         this.validator = validator;
         this.interviewProcessMapper = interviewProcessMapper;
         this.interviewProcessRepository = interviewProcessRepository;
+        this.candidateMapper = candidateMapper;
+        this.candidateRepository = candidateRepository;
     }
 
     public InterviewProcessDTO createInterviewProcess(InterviewProcessDTO interviewProcessDTO) {
@@ -126,4 +139,38 @@ public class InterviewProcessService {
         interviewProcessRepository.deleteById(id);
         logger.info("Interview process deleted with ID: {}", id);
     }
+
+    @Transactional
+    public InterviewProcessDTO createCandidateAndAddToProcess(CandidateDTO candidateDTO, UUID processId) {
+        logger.debug("Creating candidate and adding to interview process with ID: {}", processId);
+
+        // Validate CandidateDTO
+        Set<ConstraintViolation<CandidateDTO>> violations = validator.validate(candidateDTO);
+        if (!violations.isEmpty()) {
+            logger.error("Validation errors: {}", getValidationErrors(violations));
+            throw new IllegalArgumentException("Validation errors: " + getValidationErrors(violations));
+        }
+
+        Candidate candidate = candidateMapper.toEntity(candidateDTO);
+        logger.info("candidate mapped to entity successfully" );
+
+        InterviewProcess interviewProcess = interviewProcessRepository.findById(processId)
+                .orElseThrow(() -> new IllegalArgumentException("InterviewProcess not found"));
+
+        candidate.getInterviewProcesses().add(interviewProcess);
+
+        interviewProcess.getCandidates().add(candidate);
+
+
+        candidateRepository.save(candidate);
+
+        interviewProcessRepository.save(interviewProcess);
+
+        logger.info("Candidate with ID: {} added to interview process with ID: {}", candidate.getId(), processId);
+
+        return interviewProcessMapper.toDTO(interviewProcess);
+    }
+
+
+
 }
