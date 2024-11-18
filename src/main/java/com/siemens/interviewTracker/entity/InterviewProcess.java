@@ -27,7 +27,7 @@ public class InterviewProcess {
     @Column(name = "title")
     private String title;
 
-    @Enumerated(EnumType.STRING) // Save as a string in the database
+    @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private InterviewProcessStatus status;
 
@@ -38,6 +38,6 @@ public class InterviewProcess {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "interviewProcess", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<InterviewStage> interviewStages = new HashSet<>();
+    @ManyToMany(mappedBy = "interviewProcesses")
+    private Set<Candidate> candidates = new HashSet<>();
 }

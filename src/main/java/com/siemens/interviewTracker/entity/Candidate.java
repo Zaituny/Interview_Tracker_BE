@@ -49,7 +49,11 @@ public class Candidate {
     )
     private Set<Tag> tags = new HashSet<>();
 
-    @ManyToMany(mappedBy = "candidates")
-    private Set<InterviewStage> interviewStages = new HashSet<>();
-
+    @ManyToMany
+    @JoinTable(
+            name = "candidate_interview_process",
+            joinColumns = @JoinColumn(name = "candidate_id"),
+            inverseJoinColumns = @JoinColumn(name = "interview_process_id")
+    )
+    private Set<InterviewProcess> interviewProcesses = new HashSet<>();
 }

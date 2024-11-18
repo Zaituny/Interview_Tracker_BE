@@ -63,11 +63,11 @@ public class InterviewProcessService {
         }
 
 
-        InterviewProcess interviewProcess = interviewProcessMapper.interviewProcessDTOToInterviewProcess(interviewProcessDTO);
+        InterviewProcess interviewProcess = interviewProcessMapper.toEntity(interviewProcessDTO);
 
         InterviewProcess savedInterviewProcess = interviewProcessRepository.save(interviewProcess);
         logger.info("Interview process created with ID: {}", savedInterviewProcess.getId());
-        return interviewProcessMapper.interviewProcessToInterviewProcessDTO(savedInterviewProcess);
+        return interviewProcessMapper.toDTO(savedInterviewProcess);
     }
 
     public Page<InterviewProcessDTO> getAllInterviewProcesses(int limit, int offset) {
@@ -79,7 +79,7 @@ public class InterviewProcessService {
 
         Pageable pageable = PageRequest.of(offset / limit, limit);
         Page<InterviewProcess> interviewProcesses = interviewProcessRepository.findAll(pageable);
-        return interviewProcesses.map(interviewProcessMapper::interviewProcessToInterviewProcessDTO);
+        return interviewProcesses.map(interviewProcessMapper::toDTO);
     }
 
     public InterviewProcessDTO getInterviewProcessById(UUID id) {
@@ -88,7 +88,7 @@ public class InterviewProcessService {
         InterviewProcess interviewProcess = interviewProcessRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("InterviewProcess not found"));
 
-        return interviewProcessMapper.interviewProcessToInterviewProcessDTO(interviewProcess);
+        return interviewProcessMapper.toDTO(interviewProcess);
     }
 
     public InterviewProcessDTO updateInterviewProcess(UUID id, InterviewProcessDTO interviewProcessDTO) {
@@ -116,7 +116,7 @@ public class InterviewProcessService {
 
                     return interviewProcessRepository.save(existingInterviewProcess);
                 })
-                .map(interviewProcessMapper::interviewProcessToInterviewProcessDTO)
+                .map(interviewProcessMapper::toDTO)
                 .orElseThrow(() -> {
                     logger.error("InterviewProcess not found with ID: {}", id);
                     return new IllegalArgumentException("InterviewProcess not found");
