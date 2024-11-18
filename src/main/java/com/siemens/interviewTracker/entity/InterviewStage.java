@@ -32,7 +32,12 @@ public class InterviewStage {
     @Column(name = "status")
     private InterviewStageStatus status;
 
-    @ManyToMany(mappedBy = "interviewStages")
+    @ManyToMany
+    @JoinTable(
+            name = "interview_stage_candidates",
+            joinColumns = @JoinColumn(name = "interview_stage_id"),
+            inverseJoinColumns = @JoinColumn(name = "candidate_id")
+    )
     private Set<Candidate> candidates = new HashSet<>();
 
 }
