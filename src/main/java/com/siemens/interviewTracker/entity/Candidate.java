@@ -56,4 +56,6 @@ public class Candidate {
             inverseJoinColumns = @JoinColumn(name = "interview_process_id")
     )
     private Set<InterviewProcess> interviewProcesses = new HashSet<>();
+
+
 }
