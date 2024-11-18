@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -35,4 +37,7 @@ public class InterviewProcess {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @OneToMany(mappedBy = "interviewProcess", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<InterviewStage> interviewStages = new HashSet<>();
 }

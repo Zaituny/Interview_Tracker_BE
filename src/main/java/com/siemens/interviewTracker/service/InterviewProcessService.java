@@ -1,8 +1,12 @@
 package com.siemens.interviewTracker.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+
+import com.siemens.interviewTracker.dto.StageDetailsDTO;
+import com.siemens.interviewTracker.repository.InterviewRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import jakarta.validation.Validator;
@@ -27,15 +31,19 @@ public class InterviewProcessService {
     private final Validator validator;
     private final InterviewProcessMapper interviewProcessMapper;
     private final InterviewProcessRepository interviewProcessRepository;
+
+    private final InterviewRepository interviewRepository;
     private static final Logger logger = LoggerFactory.getLogger(InterviewProcessService.class);
 
     public InterviewProcessService(
             Validator validator,
             InterviewProcessMapper interviewProcessMapper,
-            InterviewProcessRepository interviewProcessRepository) {
+            InterviewProcessRepository interviewProcessRepository,
+            InterviewRepository interviewRepository) {
         this.validator = validator;
         this.interviewProcessMapper = interviewProcessMapper;
         this.interviewProcessRepository = interviewProcessRepository;
+        this.interviewRepository = interviewRepository;
     }
 
     public InterviewProcessDTO createInterviewProcess(InterviewProcessDTO interviewProcessDTO) {
@@ -125,5 +133,37 @@ public class InterviewProcessService {
 
         interviewProcessRepository.deleteById(id);
         logger.info("Interview process deleted with ID: {}", id);
+    }
+
+
+    public List<StageDetailsDTO> getStagesDetails(UUID processId) {
+        logger.debug("Fetching stage details for process ID: {}", processId);
+
+        if (processId == null) {
+            logger.error("Process ID cannot be null");
+            throw new IllegalArgumentException("Process ID cannot be null");
+        }
+
+        // Check if process ID exists
+        if (!interviewProcessRepository.existsById(processId)) {
+            logger.warn("Process with ID: {} not found", processId);
+            throw new IllegalArgumentException("Process with the given ID does not exist");
+        }
+
+        try {
+            List<StageDetailsDTO> stageDetails = interviewRepository.findStageDetailsByProcessId(processId);
+
+            if (stageDetails.isEmpty()) {
+                logger.warn("No stages found for process ID: {}", processId);
+            } else {
+                logger.info("Retrieved {} stages for process ID: {}", stageDetails.size(), processId);
+            }
+
+            return stageDetails;
+
+        } catch (Exception e) {
+            logger.error("Error occurred while fetching stage details for process ID: {}", processId, e);
+            throw new RuntimeException("Error occurred while fetching stage details: " + e.getMessage(), e);
+        }
     }
 }
