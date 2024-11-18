@@ -71,13 +71,4 @@ public class InterviewProcessController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/candidates/{processId}")
-    public ResponseEntity<InterviewProcessDTO> createCandidateAndAddToProcess(
-            @PathVariable UUID processId,
-            @Valid @RequestBody CandidateDTO candidateDTO) {
-        logger.info("Creating candidate and adding to interview process with ID: {}", processId);
-        InterviewProcessDTO updatedInterviewProcess = interviewProcessService.createCandidateAndAddToProcess(candidateDTO, processId);
-        logger.info("Candidate added to interview process with ID: {}", processId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(updatedInterviewProcess);
-    }
 }

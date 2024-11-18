@@ -1,15 +1,15 @@
 package com.siemens.interviewTracker.entity;
 
-import lombok.Getter;
-import lombok.Setter;
-import java.util.UUID;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.HashSet;
 import java.util.Set;
-
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -49,11 +49,17 @@ public class Candidate {
     )
     private Set<Tag> tags = new HashSet<>();
 
-    @ManyToMany
-    @JoinTable(
-            name = "candidate_interview_process",
-            joinColumns = @JoinColumn(name = "candidate_id"),
-            inverseJoinColumns = @JoinColumn(name = "interview_process_id")
-    )
+    @ManyToMany(mappedBy = "candidates")
     private Set<InterviewProcess> interviewProcesses = new HashSet<>();
+
+    // Helper methods
+    public void addInterviewProcess(InterviewProcess interviewProcess) {
+        this.interviewProcesses.add(interviewProcess);
+        interviewProcess.getCandidates().add(this);
+    }
+
+    public void removeInterviewProcess(InterviewProcess interviewProcess) {
+        this.interviewProcesses.remove(interviewProcess);
+        interviewProcess.getCandidates().remove(this);
+    }
 }

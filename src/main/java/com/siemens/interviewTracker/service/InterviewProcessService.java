@@ -141,34 +141,23 @@ public class InterviewProcessService {
     }
 
     @Transactional
-    public InterviewProcessDTO createCandidateAndAddToProcess(CandidateDTO candidateDTO, UUID processId) {
-        logger.debug("Creating candidate and adding to interview process with ID: {}", processId);
-
-        // Validate CandidateDTO
-        Set<ConstraintViolation<CandidateDTO>> violations = validator.validate(candidateDTO);
-        if (!violations.isEmpty()) {
-            logger.error("Validation errors: {}", getValidationErrors(violations));
-            throw new IllegalArgumentException("Validation errors: " + getValidationErrors(violations));
-        }
-
+    public CandidateDTO createCandidateAndAddToProcess(CandidateDTO candidateDTO, UUID processId) {
+        // Create new candidate from DTO
         Candidate candidate = candidateMapper.toEntity(candidateDTO);
-        logger.info("candidate mapped to entity successfully" );
 
+        // Fetch InterviewProcess by processId
         InterviewProcess interviewProcess = interviewProcessRepository.findById(processId)
-                .orElseThrow(() -> new IllegalArgumentException("InterviewProcess not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Interview process not found"));
 
-        candidate.getInterviewProcesses().add(interviewProcess);
+        // Add candidate to the interview process
+        interviewProcess.addCandidate(candidate);
 
-        interviewProcess.getCandidates().add(candidate);
-
-
+        // Persist the candidate and update the interview process
         candidateRepository.save(candidate);
-
         interviewProcessRepository.save(interviewProcess);
 
-        logger.info("Candidate with ID: {} added to interview process with ID: {}", candidate.getId(), processId);
-
-        return interviewProcessMapper.toDTO(interviewProcess);
+        // Convert saved candidate to DTO and return
+        return candidateMapper.toDTO(candidate);
     }
 
 

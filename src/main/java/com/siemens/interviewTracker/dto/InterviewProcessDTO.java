@@ -27,5 +27,5 @@ public class InterviewProcessDTO {
 
     private LocalDateTime createdAt;
 
-    private Set<CandidateDTO> candidates;
+    private Set<UUID> candidateIds;
 }

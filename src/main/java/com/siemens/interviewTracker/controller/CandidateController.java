@@ -66,4 +66,9 @@ public class CandidateController {
         candidateService.deleteCandidate(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/candidate/{processId}")
+    public CandidateDTO createCandidateAndAddToProcess(@RequestBody CandidateDTO candidateDTO, @PathVariable UUID processId) {
+        return candidateService.createCandidateAndAddToProcess(candidateDTO, processId);
+    }
 }
