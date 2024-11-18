@@ -57,5 +57,6 @@ public class Candidate {
     )
     private Set<InterviewProcess> interviewProcesses = new HashSet<>();
 
-
+    @ManyToMany(mappedBy = "candidates")
+    private Set<InterviewStage> interviewStages = new HashSet<>();
 }
