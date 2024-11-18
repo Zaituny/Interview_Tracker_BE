@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -25,7 +27,7 @@ public class InterviewProcess {
     @Column(name = "title")
     private String title;
 
-    @Enumerated(EnumType.STRING) // Save as a string in the database
+    @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private InterviewProcessStatus status;
 
@@ -35,4 +37,7 @@ public class InterviewProcess {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @ManyToMany(mappedBy = "interviewProcesses")
+    private Set<Candidate> candidates = new HashSet<>();
 }

@@ -48,4 +48,12 @@ public class Candidate {
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
     private Set<Tag> tags = new HashSet<>();
+
+    @ManyToMany
+    @JoinTable(
+            name = "candidate_interview_process",
+            joinColumns = @JoinColumn(name = "candidate_id"),
+            inverseJoinColumns = @JoinColumn(name = "interview_process_id")
+    )
+    private Set<InterviewProcess> interviewProcesses = new HashSet<>();
 }
