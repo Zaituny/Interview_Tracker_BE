@@ -48,4 +48,8 @@ public class Candidate {
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
     private Set<Tag> tags = new HashSet<>();
+
+    @ManyToMany(mappedBy = "candidates")
+    private Set<InterviewStage> interviewStages = new HashSet<>();
+
 }
