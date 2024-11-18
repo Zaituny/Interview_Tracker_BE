@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 import java.util.UUID;
 import jakarta.validation.constraints.NotBlank;
 
@@ -25,4 +26,6 @@ public class InterviewProcessDTO {
     private String createdBy;
 
     private LocalDateTime createdAt;
+
+    private Set<CandidateDTO> candidates;
 }

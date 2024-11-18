@@ -55,10 +55,10 @@ public class CandidateService {
             throw new IllegalArgumentException("Validation errors: " + validationErrors);
         }
 
-        Candidate candidate = candidateMapper.candidateDTOToCandidate(candidateDTO);
+        Candidate candidate = candidateMapper.toEntity(candidateDTO);
         candidateRepository.save(candidate);
 
-        return candidateMapper.candidateToCandidateDTO(candidate);
+        return candidateMapper.toDTO(candidate);
     }
 
     public Page<CandidateDTO> getAllCandidates(int limit, int offset) {
@@ -68,14 +68,14 @@ public class CandidateService {
         }
         Pageable pageable = PageRequest.of(offset / limit, limit);
         Page<Candidate> candidates = candidateRepository.findAll(pageable);
-        return candidates.map(candidateMapper::candidateToCandidateDTO);
+        return candidates.map(candidateMapper::toDTO);
     }
 
     public CandidateDTO getCandidateById(UUID id) {
         logger.info("Fetching candidate with ID: {}", id);
         Candidate candidate = candidateRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Candidate not found"));
-        return candidateMapper.candidateToCandidateDTO(candidate);
+        return candidateMapper.toDTO(candidate);
     }
 
     public CandidateDTO updateCandidate(UUID id, CandidateDTO candidateDTO) {
@@ -107,7 +107,7 @@ public class CandidateService {
                     }
                     return candidateRepository.save(existingCandidate);
                 })
-                .map(candidateMapper::candidateToCandidateDTO)
+                .map(candidateMapper::toDTO)
                 .orElseThrow(() -> {
                     logger.error("Candidate not found with ID: {}", id);
                     return new IllegalArgumentException("Candidate not found");

@@ -2,6 +2,8 @@ package com.siemens.interviewTracker.dto;
 
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.Set;
 import java.util.UUID;
 import jakarta.persistence.Id;
 import jakarta.validation.constraints.Size;
@@ -29,4 +31,6 @@ public class CandidateDTO {
     private String address;
 
     private String resumePath;
+
+    private Set<InterviewProcessDTO> interviewProcesses;
 }
