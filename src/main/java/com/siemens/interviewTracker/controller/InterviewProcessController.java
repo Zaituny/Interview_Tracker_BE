@@ -1,7 +1,10 @@
 package com.siemens.interviewTracker.controller;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+
+import com.siemens.interviewTracker.dto.StageDetailsDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import jakarta.validation.Valid;
@@ -67,5 +70,19 @@ public class InterviewProcessController {
         logger.info("Deleting interview process with ID: {}", id);
         interviewProcessService.deleteInterviewProcess(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{processId}/stages")
+    public ResponseEntity<List<StageDetailsDTO>> getStagesDetails(@PathVariable UUID processId) {
+        try {
+            List<StageDetailsDTO> stageDetails = interviewProcessService.getStagesDetails(processId);
+            return ResponseEntity.ok(stageDetails);
+        } catch (IllegalArgumentException e) {
+            logger.error("Invalid input or process not found: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Collections.emptyList());
+        } catch (Exception e) {
+            logger.error("Unexpected error: {}", e.getMessage());
+            return ResponseEntity.status(500).body(Collections.emptyList());
+        }
     }
 }

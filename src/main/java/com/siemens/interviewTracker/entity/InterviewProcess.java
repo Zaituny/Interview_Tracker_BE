@@ -40,4 +40,7 @@ public class InterviewProcess {
 
     @ManyToMany(mappedBy = "interviewProcesses")
     private Set<Candidate> candidates = new HashSet<>();
+
+    @OneToMany(mappedBy = "interviewProcess")
+    private Set<InterviewStage> interviewStages = new HashSet<>();
 }
