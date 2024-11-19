@@ -133,15 +133,20 @@ public class CandidateService {
         InterviewProcess interviewProcess = interviewProcessRepository.findById(processId)
                 .orElseThrow(() -> new IllegalArgumentException("Interview process not found"));
 
-        // Add candidate to the interview process
-        interviewProcess.addCandidate(candidate);
+        // Add interview process to the candidate
+        candidate.getInterviewProcesses().add(interviewProcess);
 
-        // Persist the candidate and update the interview process
-        candidateRepository.save(candidate);
+        Candidate savedCandidate = candidateRepository.save(candidate);
+
+
+        // add candidate to the interview process
+        interviewProcess.getCandidates().add(savedCandidate);
+
         interviewProcessRepository.save(interviewProcess);
 
+
         // Convert saved candidate to DTO and return
-        return candidateMapper.toDTO(candidate);
+        return candidateMapper.toDTO(savedCandidate);
     }
 
 }

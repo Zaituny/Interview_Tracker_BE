@@ -52,17 +52,6 @@ public class Candidate {
     @ManyToMany(mappedBy = "candidates")
     private Set<InterviewProcess> interviewProcesses = new HashSet<>();
 
-    // Helper methods
-    public void addInterviewProcess(InterviewProcess interviewProcess) {
-        this.interviewProcesses.add(interviewProcess);
-        interviewProcess.getCandidates().add(this);
-    }
-
-    public void removeInterviewProcess(InterviewProcess interviewProcess) {
-        this.interviewProcesses.remove(interviewProcess);
-        interviewProcess.getCandidates().remove(this);
-    }
-
     @ManyToMany(mappedBy = "candidates")
     private Set<InterviewStage> interviewStages = new HashSet<>();
 }

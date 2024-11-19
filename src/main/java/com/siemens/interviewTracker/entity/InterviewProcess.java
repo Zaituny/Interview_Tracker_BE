@@ -49,14 +49,4 @@ public class InterviewProcess {
     @OneToMany(mappedBy = "interviewProcess")
     private Set<InterviewStage> interviewStages = new HashSet<>();
 
-    // Helper methods
-    public void addCandidate(Candidate candidate) {
-        this.candidates.add(candidate);
-        candidate.getInterviewProcesses().add(this);
-    }
-
-    public void removeCandidate(Candidate candidate) {
-        this.candidates.remove(candidate);
-        candidate.getInterviewProcesses().remove(this);
-    }
 }
