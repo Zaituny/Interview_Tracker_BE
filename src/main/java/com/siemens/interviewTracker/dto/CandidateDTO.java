@@ -32,5 +32,5 @@ public class CandidateDTO {
 
     private String resumePath;
 
-    private Set<InterviewProcessDTO> interviewProcesses;
+    private Set<UUID> interviewProcessIds;
 }

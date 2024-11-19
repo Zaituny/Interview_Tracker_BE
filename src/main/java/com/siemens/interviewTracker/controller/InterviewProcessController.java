@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import com.siemens.interviewTracker.dto.CandidateDTO;
+
 import com.siemens.interviewTracker.dto.StageDetailsDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,6 +73,14 @@ public class InterviewProcessController {
         interviewProcessService.deleteInterviewProcess(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/add-candidate")
+    public ResponseEntity<String> addCandidateToProcess(@RequestParam UUID candidateId, @RequestParam UUID processId) {
+        logger.info("adding candidate with ID: {}", candidateId);
+        interviewProcessService.addCandidateToProcess(candidateId, processId);
+        return ResponseEntity.ok("Candidate added to process successfully.");
+    }
+
 
     @GetMapping("/{processId}/stages")
     public ResponseEntity<List<StageDetailsDTO>> getStagesDetails(@PathVariable UUID processId) {

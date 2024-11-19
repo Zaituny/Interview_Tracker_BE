@@ -1,6 +1,8 @@
 package com.siemens.interviewTracker.entity;
 
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,9 +10,6 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-
 
 @Getter
 @Setter
@@ -24,7 +23,7 @@ public class InterviewProcess {
     private UUID id;
 
     @NotBlank(message = "Title cannot be empty")
-    @Column(name = "title")
+    @Column(name = "title", nullable = false)
     private String title;
 
     @Enumerated(EnumType.STRING)
@@ -32,15 +31,22 @@ public class InterviewProcess {
     private InterviewProcessStatus status;
 
     @Email
-    @Column(name = "created_by")
+    @NotBlank
+    @Column(name = "created_by", nullable = false)
     private String createdBy;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @ManyToMany(mappedBy = "interviewProcesses")
+    @ManyToMany
+    @JoinTable(
+            name = "interview_process_candidates",
+            joinColumns = @JoinColumn(name = "interview_process_id"),
+            inverseJoinColumns = @JoinColumn(name = "candidate_id")
+    )
     private Set<Candidate> candidates = new HashSet<>();
 
     @OneToMany(mappedBy = "interviewProcess")
     private Set<InterviewStage> interviewStages = new HashSet<>();
+
 }

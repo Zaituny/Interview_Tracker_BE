@@ -5,6 +5,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import com.siemens.interviewTracker.dto.CandidateDTO;
+import com.siemens.interviewTracker.entity.Candidate;
+import com.siemens.interviewTracker.mapper.CandidateMapper;
+import com.siemens.interviewTracker.repository.CandidateRepository;
+
 import com.siemens.interviewTracker.dto.StageDetailsDTO;
 import com.siemens.interviewTracker.repository.InterviewRepository;
 import org.slf4j.Logger;
@@ -33,16 +38,24 @@ public class InterviewProcessService {
     private final InterviewProcessRepository interviewProcessRepository;
 
     private final InterviewRepository interviewRepository;
+    private final CandidateRepository candidateRepository;
+    private final CandidateMapper candidateMapper;
     private static final Logger logger = LoggerFactory.getLogger(InterviewProcessService.class);
+
+
 
     public InterviewProcessService(
             Validator validator,
             InterviewProcessMapper interviewProcessMapper,
             InterviewProcessRepository interviewProcessRepository,
-            InterviewRepository interviewRepository) {
+            InterviewRepository interviewRepository,
+            CandidateRepository candidateRepository,
+            CandidateMapper candidateMapper) {
         this.validator = validator;
         this.interviewProcessMapper = interviewProcessMapper;
         this.interviewProcessRepository = interviewProcessRepository;
+        this.candidateMapper = candidateMapper;
+        this.candidateRepository = candidateRepository;
         this.interviewRepository = interviewRepository;
     }
 
@@ -166,4 +179,25 @@ public class InterviewProcessService {
             throw new RuntimeException("Error occurred while fetching stage details: " + e.getMessage(), e);
         }
     }
+
+    public void addCandidateToProcess(UUID candidateId, UUID processId) {
+        // Fetch Candidate and InterviewProcess entities by their IDs
+        Candidate candidate = candidateRepository.findById(candidateId)
+                .orElseThrow(() -> new RuntimeException("Candidate not found with id: " + candidateId));
+
+        InterviewProcess interviewProcess = interviewProcessRepository.findById(processId)
+                .orElseThrow(() -> new RuntimeException("InterviewProcess not found with id: " + processId));
+
+        // Add Candidate to InterviewProcess
+        interviewProcess.getCandidates().add(candidate);
+
+        // Add InterviewProcess to Candidate
+        candidate.getInterviewProcesses().add(interviewProcess);
+
+        // Save both entities to persist the relationship
+        candidateRepository.save(candidate);
+        interviewProcessRepository.save(interviewProcess);
+    }
+
+
 }
