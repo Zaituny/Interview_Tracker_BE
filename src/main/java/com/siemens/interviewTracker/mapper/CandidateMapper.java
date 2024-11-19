@@ -20,6 +20,10 @@ public interface CandidateMapper {
 
     Candidate toEntity(CandidateDTO candidateDTO);
 
+    Set<CandidateDTO> toDTOSet(Set<Candidate> candidates);
+
+    Set<Candidate> toEntitySet(Set<CandidateDTO> candidateDTOs);
+
     @Named("mapInterviewProcessesToIds")
     default Set<UUID> mapInterviewProcessesToIds(Set<InterviewProcess> interviewProcesses) {
         if (interviewProcesses == null) {

@@ -199,5 +199,14 @@ public class InterviewProcessService {
         interviewProcessRepository.save(interviewProcess);
     }
 
+    public Set<CandidateDTO> getAllCandidatesInProcess(UUID processId){
+        logger.info("getting all candidates for process with ID: {}" , processId);
+
+        InterviewProcess interviewProcess = interviewProcessRepository.findById(processId)
+                .orElseThrow(() -> new RuntimeException("InterviewProcess not found with id: " + processId));
+
+        Set<Candidate> candidates = interviewProcess.getCandidates();
+        return candidateMapper.toDTOSet(candidates);
+    }
 
 }

@@ -2,6 +2,7 @@ package com.siemens.interviewTracker.controller;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import com.siemens.interviewTracker.dto.CandidateDTO;
@@ -94,5 +95,11 @@ public class InterviewProcessController {
             logger.error("Unexpected error: {}", e.getMessage());
             return ResponseEntity.status(500).body(Collections.emptyList());
         }
+    }
+
+    @GetMapping("/{processId}/candidates")
+    public ResponseEntity<Set<CandidateDTO>> getCandidatesByProcessId(@PathVariable UUID processId) {
+        Set<CandidateDTO> candidates = interviewProcessService.getAllCandidatesInProcess(processId);
+        return ResponseEntity.ok(candidates);
     }
 }
