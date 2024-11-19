@@ -4,6 +4,7 @@ import com.siemens.interviewTracker.dto.CandidateDTO;
 import com.siemens.interviewTracker.dto.InterviewProcessDTO;
 import com.siemens.interviewTracker.entity.Candidate;
 import com.siemens.interviewTracker.entity.InterviewProcess;
+import com.siemens.interviewTracker.exception.DuplicateFieldException;
 import com.siemens.interviewTracker.mapper.CandidateMapper;
 import com.siemens.interviewTracker.repository.CandidateRepository;
 import com.siemens.interviewTracker.repository.InterviewProcessRepository;
@@ -11,6 +12,7 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -45,14 +47,22 @@ public class CandidateService {
 
     public CandidateDTO createCandidate(CandidateDTO candidateDTO) {
         logger.debug("Validating candidate for creation: {}", candidateDTO);
+
         if (candidateDTO == null) {
             throw new IllegalArgumentException("Candidate cannot be null");
         }
 
+        // Check for duplicate email
         if (candidateRepository.findByEmail(candidateDTO.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("Candidate already exists");
+            throw new DuplicateFieldException("A candidate with the provided email already exists");
         }
 
+        // Check for duplicate phone number (if phone number is provided)
+        if (candidateDTO.getPhone() != null && candidateRepository.findByPhone(candidateDTO.getPhone()).isPresent()) {
+            throw new DuplicateFieldException("A candidate with the provided phone number already exists");
+        }
+
+        // Validate candidate DTO
         Set<ConstraintViolation<CandidateDTO>> violations = validator.validate(candidateDTO);
         if (!violations.isEmpty()) {
             logger.error("Validation errors: {}", getValidationErrors(violations));
@@ -60,11 +70,13 @@ public class CandidateService {
             throw new IllegalArgumentException("Validation errors: " + validationErrors);
         }
 
+        // Convert DTO to entity and save
         Candidate candidate = candidateMapper.toEntity(candidateDTO);
         candidateRepository.save(candidate);
 
         return candidateMapper.toDTO(candidate);
     }
+
 
     public Page<CandidateDTO> getAllCandidates(int limit, int offset) {
         logger.debug("Fetching all candidates with limit: {}, offset: {}", limit, offset);
@@ -126,27 +138,36 @@ public class CandidateService {
 
     @Transactional
     public CandidateDTO createCandidateAndAddToProcess(CandidateDTO candidateDTO, UUID processId) {
-        // Create new candidate from DTO
-        Candidate candidate = candidateMapper.toEntity(candidateDTO);
+        try {
+            // Create new candidate from DTO
+            Candidate candidate = candidateMapper.toEntity(candidateDTO);
 
-        // Fetch InterviewProcess by processId
-        InterviewProcess interviewProcess = interviewProcessRepository.findById(processId)
-                .orElseThrow(() -> new IllegalArgumentException("Interview process not found"));
+            // Fetch InterviewProcess by processId
+            InterviewProcess interviewProcess = interviewProcessRepository.findById(processId)
+                    .orElseThrow(() -> new IllegalArgumentException("Interview process not found"));
 
-        // Add interview process to the candidate
-        candidate.getInterviewProcesses().add(interviewProcess);
+            // Add interview process to the candidate
+            candidate.getInterviewProcesses().add(interviewProcess);
 
-        Candidate savedCandidate = candidateRepository.save(candidate);
+            Candidate savedCandidate = candidateRepository.save(candidate);
 
+            // Add candidate to the interview process
+            interviewProcess.getCandidates().add(savedCandidate);
+            interviewProcessRepository.save(interviewProcess);
 
-        // add candidate to the interview process
-        interviewProcess.getCandidates().add(savedCandidate);
+            // Convert saved candidate to DTO and return
+            return candidateMapper.toDTO(savedCandidate);
 
-        interviewProcessRepository.save(interviewProcess);
-
-
-        // Convert saved candidate to DTO and return
-        return candidateMapper.toDTO(savedCandidate);
+        } catch (DataIntegrityViolationException ex) {
+            // Check for unique constraint violation
+            if (ex.getMessage().contains("email")) {
+                throw new DuplicateFieldException("Email already exists");
+            } else if (ex.getMessage().contains("phone")) {
+                throw new DuplicateFieldException("Phone number already exists");
+            }
+            throw ex; // Re-throw for other exceptions
+        }
     }
+
 
 }
