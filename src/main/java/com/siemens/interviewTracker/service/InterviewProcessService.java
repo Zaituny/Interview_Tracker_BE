@@ -199,5 +199,8 @@ public class InterviewProcessService {
         interviewProcessRepository.save(interviewProcess);
     }
 
-
+    public long countInterviewProcessesByMonthAndYear(int month, int year) {
+        logger.debug("Counting interview processes for month: {} and year: {}", month, year);
+        return interviewProcessRepository.countInterviewProcessesByMonthAndYear(month, year);
+    }
 }

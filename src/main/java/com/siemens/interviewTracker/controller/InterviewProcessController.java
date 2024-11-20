@@ -95,4 +95,11 @@ public class InterviewProcessController {
             return ResponseEntity.status(500).body(Collections.emptyList());
         }
     }
+
+    @GetMapping("/count")
+    public ResponseEntity<Long> countInterviewProcessesByMonthAndYear(@RequestParam int month, @RequestParam int year) {
+        logger.info("Counting interview processes for month: {} and year: {}", month, year);
+        long count = interviewProcessService.countInterviewProcessesByMonthAndYear(month, year);
+        return ResponseEntity.ok(count);
+    }
 }
