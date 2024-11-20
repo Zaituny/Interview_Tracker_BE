@@ -20,4 +20,6 @@ public class InterviewStageDTO {
     private UUID interviewProcessId;
 
     private InterviewStageStatus status;
+
+    private Integer stageOrder;
 }

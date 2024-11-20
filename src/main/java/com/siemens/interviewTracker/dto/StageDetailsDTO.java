@@ -8,13 +8,16 @@ import lombok.Setter;
 public class StageDetailsDTO {
 
     private String stageName;
+    private Integer stageOrder;
     private long numberOfCandidates;
     private long numberOfInterviewers;
     private long numberOfCompletedInterviews;
     private long numberOfUpcomingInterviews;
 
-    public StageDetailsDTO(String stageName, long numberOfCandidates, long numberOfInterviewers, long numberOfCompletedInterviews, long numberOfUpcomingInterviews) {
+
+    public StageDetailsDTO(String stageName,Integer stageOrder, long numberOfCandidates, long numberOfInterviewers, long numberOfCompletedInterviews, long numberOfUpcomingInterviews) {
         this.stageName = stageName;
+        this.stageOrder = stageOrder;
         this.numberOfCandidates = numberOfCandidates;
         this.numberOfInterviewers = numberOfInterviewers;
         this.numberOfCompletedInterviews = numberOfCompletedInterviews;

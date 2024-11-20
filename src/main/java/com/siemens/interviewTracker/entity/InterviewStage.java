@@ -32,6 +32,9 @@ public class InterviewStage {
     @Column(name = "status")
     private InterviewStageStatus status;
 
+    @Column(name = "stage_order")
+    private Integer stageOrder; // Order of the stage within the process
+
     @ManyToMany
     @JoinTable(
             name = "interview_stage_candidates",

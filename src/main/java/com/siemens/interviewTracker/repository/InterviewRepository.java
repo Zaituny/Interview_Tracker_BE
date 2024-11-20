@@ -16,6 +16,7 @@ public interface InterviewRepository extends JpaRepository<InterviewStage, UUID>
     @Query("""
     SELECT new com.siemens.interviewTracker.dto.StageDetailsDTO(
         s.name,
+        s.stageOrder,
         COUNT(DISTINCT i.candidate.id),
         COUNT(DISTINCT i.interviewer.id),
         SUM(CASE WHEN i.status = 'COMPLETED' THEN 1 ELSE 0 END),
@@ -24,7 +25,8 @@ public interface InterviewRepository extends JpaRepository<InterviewStage, UUID>
     FROM InterviewStage s
     LEFT JOIN Interview i ON s.id = i.stage.id
     WHERE s.interviewProcess.id = :processId
-    GROUP BY s.id
+    GROUP BY s.id, s.stageOrder
+    Order By s.stageOrder ASC
 """)
     List<StageDetailsDTO> findStageDetailsByProcessId(@Param("processId")UUID processId);
 }
