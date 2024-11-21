@@ -49,7 +49,7 @@ public class Candidate {
     )
     private Set<Tag> tags = new HashSet<>();
 
-    @ManyToMany(mappedBy = "candidates")
+    @ManyToMany(mappedBy = "candidates" , cascade = CascadeType.ALL)
     private Set<InterviewProcess> interviewProcesses = new HashSet<>();
 
     @ManyToMany(mappedBy = "candidates")

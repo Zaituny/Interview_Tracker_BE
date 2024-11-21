@@ -143,8 +143,12 @@ public class InterviewProcessService {
             logger.error("InterviewProcess not found with ID: {}", id);
             throw new IllegalArgumentException("InterviewProcess not found");
         }
+        InterviewProcess interviewProcess = interviewProcessRepository.findById(id).get();
 
-        interviewProcessRepository.deleteById(id);
+        interviewProcess.getCandidates().forEach(candidate -> candidate.getInterviewProcesses().remove(interviewProcess));
+        interviewProcess.getCandidates().clear();
+        interviewProcessRepository.save(interviewProcess);
+        interviewProcessRepository.delete(interviewProcess);
         logger.info("Interview process deleted with ID: {}", id);
     }
 

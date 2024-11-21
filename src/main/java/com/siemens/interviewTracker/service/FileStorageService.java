@@ -1,4 +1,6 @@
 package com.siemens.interviewTracker.service;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -9,19 +11,17 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Objects;
 import java.util.UUID;
-
 @Service
 public class FileStorageService {
 
     public static final String STORAGE_DIRECTORY = "storage/cv"; // Directory for storing CVs
-    public static final String BASE_URL = "/cv/"; // Base URL to access CVs
 
     public String saveFile(MultipartFile fileToSave) throws IOException {
         if (fileToSave == null) {
             throw new NullPointerException("fileToSave is null");
         }
 
-        // validate file tpe
+        // Validate file type
         if (!"application/pdf".equals(fileToSave.getContentType())) {
             throw new IllegalArgumentException("Invalid file format. Only PDF files are allowed.");
         }
@@ -43,12 +43,34 @@ public class FileStorageService {
         // Save the file
         Files.copy(fileToSave.getInputStream(), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
-        // Return the relative path for accessing the file in the application
-        return BASE_URL + uniqueFilename;
+        // Return the filename (without the storage directory or BASE_URL)
+        return uniqueFilename;
     }
 
     private String getFileExtension(String filename) {
         int lastIndexOfDot = filename.lastIndexOf('.');
         return (lastIndexOfDot != -1) ? filename.substring(lastIndexOfDot) : ""; // Returns file extension with dot
+    }
+
+    public Resource getFile(String filename) throws IOException {
+        if (filename == null || filename.isBlank()) {
+            throw new IllegalArgumentException("Filename cannot be null or empty");
+        }
+
+        // Construct the file path
+        Path filePath = Path.of(STORAGE_DIRECTORY, filename);
+
+        // Ensure the file exists
+        if (!Files.exists(filePath)) {
+            throw new IOException("File not found: " + filePath);
+        }
+
+        // Load the file as a Resource
+        Resource fileResource = new UrlResource(filePath.toUri());
+        if (!fileResource.exists() || !fileResource.isReadable()) {
+            throw new IOException("File cannot be read: " + filePath);
+        }
+
+        return fileResource;
     }
 }

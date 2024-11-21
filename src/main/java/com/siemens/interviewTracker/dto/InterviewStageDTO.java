@@ -17,6 +17,9 @@ public class InterviewStageDTO {
     @NotBlank(message = "Stage name cannot be empty")
     private String name;
 
+    @NotBlank(message = "Stage description cannot be empty")
+    private String description;
+
     private UUID interviewProcessId;
 
     private InterviewStageStatus status;
