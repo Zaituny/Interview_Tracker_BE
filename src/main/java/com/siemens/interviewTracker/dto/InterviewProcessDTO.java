@@ -1,6 +1,7 @@
 package com.siemens.interviewTracker.dto;
 
 import com.siemens.interviewTracker.entity.InterviewProcessStatus;
+import com.siemens.interviewTracker.entity.InterviewStage;
 import jakarta.validation.constraints.Email;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,4 +29,6 @@ public class InterviewProcessDTO {
     private LocalDateTime createdAt;
 
     private Set<UUID> candidateIds;
+
+    private Set<UUID> interviewStageIds;
 }

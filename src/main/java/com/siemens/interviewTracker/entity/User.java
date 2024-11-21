@@ -2,9 +2,9 @@ package com.siemens.interviewTracker.entity;
 
 import lombok.Getter;
 import lombok.Setter;
-import java.util.UUID;
-import java.util.Collection;
-import java.util.Collections;
+
+import java.util.*;
+
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import jakarta.validation.constraints.*;
@@ -48,6 +48,9 @@ public class User implements UserDetails {
 
     @Column(name = "reset_password_token_date")
     private LocalDateTime resetPasswordTokenDate;
+
+    @ManyToMany(mappedBy = "interviewers")
+    private Set<InterviewStage> interviewStages = new HashSet<>();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

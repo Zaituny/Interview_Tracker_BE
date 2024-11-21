@@ -38,37 +38,7 @@ public class InterviewStageService {
         this.candidateRepository = candidateRepository;
     }
 
-    public InterviewStageDTO addStageToProcess(InterviewStageDTO interviewStageDTO) {
-        // Validate that the process exists using the processId from the DTO
-        InterviewProcess interviewProcess = interviewProcessRepository.findById(interviewStageDTO.getInterviewProcessId())
-                .orElseThrow(() -> new IllegalArgumentException("InterviewProcess with ID " + interviewStageDTO.getInterviewProcessId() + " not found"));
 
-        // Calculate the next stage order for the process
-        int nextStageOrder = interviewStageRepository
-                .findMaxStageOrderByInterviewProcessId(interviewProcess.getId())
-                .orElse(0) + 1;
-
-        // Use the mapper to convert DTO to Entity
-        InterviewStage interviewStage = interviewStageMapper.interviewStageDTOToInterviewStage(interviewStageDTO);
-
-        // If this is the first stage, add all candidates of the process to the stage
-        if (nextStageOrder == 1) {
-            interviewStage.setCandidates(new HashSet<>(interviewProcess.getCandidates()));
-        }
-
-        // Set the stage order and associate the stage with the process
-        interviewStage.setStageOrder(nextStageOrder);
-        interviewStage.setInterviewProcess(interviewProcess);
-
-        // Save the InterviewStage to the database
-        InterviewStage savedStage = interviewStageRepository.save(interviewStage);
-
-        logger.info("Added new stage '{}' with order {} to Interview Process with ID {}",
-                interviewStage.getName(), nextStageOrder, interviewStageDTO.getInterviewProcessId());
-
-        // Return the saved stage as a DTO
-        return interviewStageMapper.interviewStageToInterviewStageDTO(savedStage);
-    }
 
     public void addCandidateToStage(UUID stageId, UUID candidateId) {
         // Fetch the stage by ID
@@ -92,4 +62,35 @@ public class InterviewStageService {
 
         logger.info("Added candidate '{}' to stage '{}'", candidate.getName(), interviewStage.getName());
     }
+
+//    public void moveCandidateToNextStage(UUID candidateId, UUID currentStageId) {
+//        // Fetch the current stage by ID
+//        InterviewStage currentStage = interviewStageRepository.findById(currentStageId)
+//                .orElseThrow(() -> new IllegalArgumentException("InterviewStage with ID " + currentStageId + " not found"));
+//
+//        // Fetch the candidate by ID
+//        Candidate candidate = candidateRepository.findById(candidateId)
+//                .orElseThrow(() -> new IllegalArgumentException("Candidate with ID " + candidateId + " not found"));
+//
+//        // Validate that the candidate is part of the same interview process
+//        if (!currentStage.getCandidates().contains(candidate)) {
+//            throw new IllegalArgumentException("Candidate with ID " + candidateId + " is not part of the interview stage");
+//        }
+//
+//        // Get the next stage in the interview process
+//        InterviewStage nextStage = interviewStageRepository.findNextStage(currentStage.getInterviewProcess().getId(),(1+currentStage.getStageOrder()))
+//                .orElseThrow(() -> new IllegalArgumentException("No next stage found for the interview process"));
+//
+//        // Remove the candidate from the current stage
+//        currentStage.getCandidates().remove(candidate);
+//
+//        // Add the candidate to the next stage
+//        nextStage.getCandidates().add(candidate);
+//
+//        // Save both the updated stages
+//        interviewStageRepository.save(currentStage);
+//        interviewStageRepository.save(nextStage);
+//
+//        logger.info("Moved candidate '{}' from stage '{}' to stage '{}'", candidate.getName(), currentStage.getName(), nextStage.getName());
+//    }
 }
