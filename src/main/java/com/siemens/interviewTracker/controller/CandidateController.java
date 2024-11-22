@@ -5,6 +5,7 @@ import com.siemens.interviewTracker.service.CandidateService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -70,5 +71,22 @@ public class CandidateController {
     @PostMapping("/candidate/{processId}")
     public CandidateDTO createCandidateAndAddToProcess(@RequestBody CandidateDTO candidateDTO, @PathVariable UUID processId) {
         return candidateService.createCandidateAndAddToProcess(candidateDTO, processId);
+    }
+
+    @GetMapping("/interview-process/{interviewProcessId}")
+    public ResponseEntity<Page<CandidateDTO>> getCandidatesByInterviewProcess(
+            @PathVariable UUID interviewProcessId,
+            @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(defaultValue = "0") int offset) {
+        logger.info("Fetching candidates for interview process ID: {}, with limit: {}, offset: {}", interviewProcessId, limit, offset);
+        if (limit <= 0 || limit > 100) {
+            throw new IllegalArgumentException("Limit must be between 1 and 100.");
+        }
+        if (offset < 0) {
+            throw new IllegalArgumentException("Offset must be non-negative.");
+        }
+
+        Page<CandidateDTO> candidates = candidateService.getCandidatesInInterviewProcess(interviewProcessId, limit, offset);
+        return ResponseEntity.ok(candidates);
     }
 }

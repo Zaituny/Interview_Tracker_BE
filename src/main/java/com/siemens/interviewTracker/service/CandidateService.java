@@ -202,5 +202,23 @@ public class CandidateService {
         }
     }
 
+    public Page<CandidateDTO> getCandidatesInInterviewProcess(UUID interviewProcessId, int limit, int offset) {
+        logger.debug("Fetching candidates for interview process with ID: {}. Limit: {}, Offset: {}", interviewProcessId, limit, offset);
 
+        if (limit < 1 || offset < 0) {
+            throw new IllegalArgumentException("Limit and offset must be greater than 0");
+        }
+
+        if (interviewProcessId == null) {
+            throw new IllegalArgumentException("Interview process id cannot be null");
+        }
+
+        InterviewProcess interviewProcess = interviewProcessRepository.findById(interviewProcessId)
+                .orElseThrow(() -> new EntityNotFoundException("Interview process with ID " + interviewProcessId + " not found"));
+
+        Pageable pageable = PageRequest.of(offset / limit, limit);
+        Page<Candidate> candidates = candidateRepository.findByInterviewProcessesContaining(interviewProcess, pageable);
+
+        return  candidates.map(candidateMapper::toDTO);
+    }
 }
