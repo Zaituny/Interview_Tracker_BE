@@ -18,16 +18,15 @@ public class Feedback {
 
     @ManyToOne
     @JoinColumn(name="stage_id", nullable = false)
-    private InterviewStage stage_id;
+    private InterviewStage stage;
 
     @ManyToOne
     @JoinColumn(name="user_id", nullable = false)
-    private User user_id;
+    private User user;
 
     @ManyToOne
     @JoinColumn(name="candidate_id", nullable = false)
-    private Candidate candidate_id;
-
+    private Candidate candidate;
     @Column(name="comments")
     private String comments;
 }
