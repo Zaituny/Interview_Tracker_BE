@@ -23,20 +23,6 @@ public class InterviewStageController {
         this.interviewStageService = interviewStageService;
     }
 
-    @PostMapping
-    public ResponseEntity<InterviewStageDTO> addStageToProcess(@Valid @RequestBody InterviewStageDTO interviewStageDTO) {
-        try {
-            InterviewStageDTO createdStage = interviewStageService.addStageToProcess(interviewStageDTO);
-            return new ResponseEntity<>(createdStage, HttpStatus.CREATED);
-        } catch (IllegalArgumentException e) {
-            logger.error("Error adding stage to process: {}", e.getMessage());
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            logger.error("Unexpected error occurred: {}", e.getMessage());
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
     @PostMapping("/{stageId}/add-candidate/{candidateId}")
     public ResponseEntity<Void> addCandidateToStage(@PathVariable UUID stageId, @PathVariable UUID candidateId) {
         try {
@@ -50,4 +36,19 @@ public class InterviewStageController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+//    @PostMapping("/{stageId}/move-candidate/{candidateId}")
+//    public ResponseEntity<Void> moveCandidateToNextStage(@PathVariable UUID stageId, @PathVariable UUID candidateId) {
+//        try {
+//            interviewStageService.moveCandidateToNextStage(candidateId, stageId);
+//            return new ResponseEntity<>(HttpStatus.OK);
+//        } catch (IllegalArgumentException e) {
+//            logger.error("Error moving candidate to next stage: {}", e.getMessage());
+//            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+//        } catch (Exception e) {
+//            logger.error("Unexpected error occurred: {}", e.getMessage());
+//            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+//        }
+//    }
+
 }

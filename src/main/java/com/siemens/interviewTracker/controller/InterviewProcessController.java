@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import com.siemens.interviewTracker.dto.CandidateDTO;
 
+import com.siemens.interviewTracker.dto.InterviewStageDTO;
 import com.siemens.interviewTracker.dto.StageDetailsDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,6 +80,21 @@ public class InterviewProcessController {
         logger.info("adding candidate with ID: {}", candidateId);
         interviewProcessService.addCandidateToProcess(candidateId, processId);
         return ResponseEntity.ok("Candidate added to process successfully.");
+    }
+
+
+    @PostMapping("/add-stage")
+    public ResponseEntity<InterviewStageDTO> addStageToProcess(@Valid @RequestBody InterviewStageDTO interviewStageDTO) {
+        try {
+            InterviewStageDTO createdStage = interviewProcessService.addStageToProcess(interviewStageDTO);
+            return new ResponseEntity<>(createdStage, HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            logger.error("Error adding stage to process: {}", e.getMessage());
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            logger.error("Unexpected error occurred: {}", e.getMessage());
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
 

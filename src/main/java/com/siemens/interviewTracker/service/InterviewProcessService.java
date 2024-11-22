@@ -1,17 +1,21 @@
 package com.siemens.interviewTracker.service;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 import com.siemens.interviewTracker.dto.CandidateDTO;
+import com.siemens.interviewTracker.dto.InterviewStageDTO;
 import com.siemens.interviewTracker.entity.Candidate;
+import com.siemens.interviewTracker.entity.InterviewStage;
 import com.siemens.interviewTracker.mapper.CandidateMapper;
+import com.siemens.interviewTracker.mapper.InterviewStageMapper;
 import com.siemens.interviewTracker.repository.CandidateRepository;
+import com.siemens.interviewTracker.repository.InterviewStageRepository;
 
 import com.siemens.interviewTracker.dto.StageDetailsDTO;
-import com.siemens.interviewTracker.repository.InterviewRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import jakarta.validation.Validator;
@@ -35,9 +39,11 @@ import static com.siemens.interviewTracker.utils.ValidationUtils.getValidationEr
 public class InterviewProcessService {
     private final Validator validator;
     private final InterviewProcessMapper interviewProcessMapper;
+
+    private final InterviewStageMapper interviewStageMapper;
     private final InterviewProcessRepository interviewProcessRepository;
 
-    private final InterviewRepository interviewRepository;
+    private final InterviewStageRepository interviewStageRepository;
     private final CandidateRepository candidateRepository;
     private final CandidateMapper candidateMapper;
     private static final Logger logger = LoggerFactory.getLogger(InterviewProcessService.class);
@@ -48,15 +54,18 @@ public class InterviewProcessService {
             Validator validator,
             InterviewProcessMapper interviewProcessMapper,
             InterviewProcessRepository interviewProcessRepository,
-            InterviewRepository interviewRepository,
             CandidateRepository candidateRepository,
-            CandidateMapper candidateMapper) {
+            CandidateMapper candidateMapper,
+            InterviewStageRepository interviewStageRepository,
+            InterviewStageMapper interviewStageMapper)
+    {
         this.validator = validator;
         this.interviewProcessMapper = interviewProcessMapper;
         this.interviewProcessRepository = interviewProcessRepository;
         this.candidateMapper = candidateMapper;
         this.candidateRepository = candidateRepository;
-        this.interviewRepository = interviewRepository;
+        this.interviewStageRepository = interviewStageRepository;
+        this.interviewStageMapper = interviewStageMapper;
     }
 
     public InterviewProcessDTO createInterviewProcess(InterviewProcessDTO interviewProcessDTO) {
@@ -164,7 +173,7 @@ public class InterviewProcessService {
         }
 
         try {
-            List<StageDetailsDTO> stageDetails = interviewRepository.findStageDetailsByProcessId(processId);
+            List<StageDetailsDTO> stageDetails = interviewStageRepository.findStageDetailsByProcessId(processId);
 
             if (stageDetails.isEmpty()) {
                 logger.warn("No stages found for process ID: {}", processId);
@@ -180,6 +189,7 @@ public class InterviewProcessService {
         }
     }
 
+    @Transactional
     public void addCandidateToProcess(UUID candidateId, UUID processId) {
         // Fetch Candidate and InterviewProcess entities by their IDs
         Candidate candidate = candidateRepository.findById(candidateId)
@@ -194,9 +204,54 @@ public class InterviewProcessService {
         // Add InterviewProcess to Candidate
         candidate.getInterviewProcesses().add(interviewProcess);
 
+        // Check for the first stage in the process
+
+        Pageable pageable = PageRequest.of(0, 1);  // Limit to the first result
+        List<InterviewStage> stages = interviewStageRepository.findStagesByInterviewProcessId(processId, pageable);
+        InterviewStage firstStage = stages.isEmpty() ? null : stages.get(0);
+
+        if (firstStage != null) {
+            // Add Candidate to the first stage
+            firstStage.getCandidates().add(candidate);
+            candidate.getInterviewStages().add(firstStage);
+            interviewStageRepository.save(firstStage); // Persist the change in the stage
+        }
+
         // Save both entities to persist the relationship
         candidateRepository.save(candidate);
         interviewProcessRepository.save(interviewProcess);
+    }
+
+    public InterviewStageDTO addStageToProcess(InterviewStageDTO interviewStageDTO) {
+        // Validate that the process exists using the processId from the DTO
+        InterviewProcess interviewProcess = interviewProcessRepository.findById(interviewStageDTO.getInterviewProcessId())
+                .orElseThrow(() -> new IllegalArgumentException("InterviewProcess with ID " + interviewStageDTO.getInterviewProcessId() + " not found"));
+
+        // Calculate the next stage order for the process
+        int nextStageOrder = interviewStageRepository
+                .findMaxStageOrderByInterviewProcessId(interviewProcess.getId())
+                .orElse(0) + 1;
+
+        // Use the mapper to convert DTO to Entity
+        InterviewStage interviewStage = interviewStageMapper.interviewStageDTOToInterviewStage(interviewStageDTO);
+
+        // If this is the first stage, add all candidates of the process to the stage
+        if (nextStageOrder == 1) {
+            interviewStage.setCandidates(new HashSet<>(interviewProcess.getCandidates()));
+        }
+
+        // Set the stage order and associate the stage with the process
+        interviewStage.setStageOrder(nextStageOrder);
+        interviewStage.setInterviewProcess(interviewProcess);
+
+        // Save the InterviewStage to the database
+        InterviewStage savedStage = interviewStageRepository.save(interviewStage);
+
+        logger.info("Added new stage '{}' with order {} to Interview Process with ID {}",
+                interviewStage.getName(), nextStageOrder, interviewStageDTO.getInterviewProcessId());
+
+        // Return the saved stage as a DTO
+        return interviewStageMapper.interviewStageToInterviewStageDTO(savedStage);
     }
 
 

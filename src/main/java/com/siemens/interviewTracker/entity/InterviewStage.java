@@ -35,12 +35,22 @@ public class InterviewStage {
     @Column(name = "stage_order")
     private Integer stageOrder; // Order of the stage within the process
 
-    @ManyToMany
+    @ManyToMany(cascade = CascadeType.PERSIST)
     @JoinTable(
             name = "interview_stage_candidates",
             joinColumns = @JoinColumn(name = "interview_stage_id"),
             inverseJoinColumns = @JoinColumn(name = "candidate_id")
     )
     private Set<Candidate> candidates = new HashSet<>();
+
+    @ManyToMany
+    @JoinTable(
+            name ="interview_stage_interviewers",
+            joinColumns = @JoinColumn(name = "interview_stage_id"),
+            inverseJoinColumns = @JoinColumn(name ="interviwer_id")
+    )
+    private Set<User> interviewers = new HashSet<>();
+
+
 
 }
