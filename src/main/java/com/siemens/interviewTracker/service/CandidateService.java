@@ -4,10 +4,12 @@ import com.siemens.interviewTracker.dto.CandidateDTO;
 import com.siemens.interviewTracker.dto.InterviewProcessDTO;
 import com.siemens.interviewTracker.entity.Candidate;
 import com.siemens.interviewTracker.entity.InterviewProcess;
+import com.siemens.interviewTracker.exception.CandidateDeletionException;
 import com.siemens.interviewTracker.exception.DuplicateFieldException;
 import com.siemens.interviewTracker.mapper.CandidateMapper;
 import com.siemens.interviewTracker.repository.CandidateRepository;
 import com.siemens.interviewTracker.repository.InterviewProcessRepository;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import org.slf4j.Logger;
@@ -19,6 +21,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -54,12 +58,12 @@ public class CandidateService {
 
         // Check for duplicate email
         if (candidateRepository.findByEmail(candidateDTO.getEmail()).isPresent()) {
-            throw new DuplicateFieldException("A candidate with the provided email already exists");
+            throw new DuplicateFieldException("email", candidateDTO.getEmail());
         }
 
         // Check for duplicate phone number (if phone number is provided)
         if (candidateDTO.getPhone() != null && candidateRepository.findByPhone(candidateDTO.getPhone()).isPresent()) {
-            throw new DuplicateFieldException("A candidate with the provided phone number already exists");
+            throw new DuplicateFieldException("phone", candidateDTO.getPhone());
         }
 
         // Validate candidate DTO
@@ -133,7 +137,36 @@ public class CandidateService {
 
     public void deleteCandidate(UUID id) {
         logger.info("Deleting candidate with ID: {}", id);
+
+        // Fetch candidate to check associations
+        Candidate candidate = candidateRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Candidate with ID " + id + " not found"));
+
+        // Prepare a map to hold association details if any
+        Map<String, Object> errorDetails = new HashMap<>();
+
+        // Check for interview process associations
+        if (!candidate.getInterviewProcesses().isEmpty()) {
+            errorDetails.put("interviewProcesses", candidate.getInterviewProcesses().size());
+        }
+
+        // Check for interview stage associations
+        if (!candidate.getInterviewStages().isEmpty()) {
+            errorDetails.put("interviewStages", candidate.getInterviewStages().size());
+        }
+
+        // If there are associations, throw the custom exception
+        if (!errorDetails.isEmpty()) {
+            errorDetails.put("message", "Candidate cannot be deleted due to existing associations");
+            errorDetails.put("candidateId", id);
+            logger.warn("Candidate deletion blocked due to associations: {}", errorDetails);
+
+            throw new CandidateDeletionException(errorDetails);
+        }
+
+        // Proceed to delete candidate
         candidateRepository.deleteById(id);
+        logger.info("Candidate with ID: {} has been successfully deleted", id);
     }
 
     @Transactional
@@ -161,9 +194,9 @@ public class CandidateService {
         } catch (DataIntegrityViolationException ex) {
             // Check for unique constraint violation
             if (ex.getMessage().contains("email")) {
-                throw new DuplicateFieldException("Email already exists");
+                throw new DuplicateFieldException("email", candidateDTO.getEmail());
             } else if (ex.getMessage().contains("phone")) {
-                throw new DuplicateFieldException("Phone number already exists");
+                throw new DuplicateFieldException("phone", candidateDTO.getPhone());
             }
             throw ex; // Re-throw for other exceptions
         }

@@ -52,7 +52,16 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(DuplicateFieldException.class)
-    public ResponseEntity<String> handleDuplicateFieldException(DuplicateFieldException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+    public ResponseEntity<Map<String, String>> handleDuplicateFieldException(DuplicateFieldException ex) {
+        Map<String, String> errorDetails = new HashMap<>();
+        errorDetails.put(ex.getField(), "already exists");
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorDetails);
+    }
+
+    @ExceptionHandler(CandidateDeletionException.class)
+    public ResponseEntity<Map<String, Object>> handleCandidateDeletionException(CandidateDeletionException ex) {
+        // Return the error details with a 400 Bad Request status
+        return ResponseEntity.badRequest().body(ex.getErrorDetails());
     }
 }

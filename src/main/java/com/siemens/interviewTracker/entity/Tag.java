@@ -21,7 +21,7 @@ public class Tag {
     @Column(name = "name", nullable = false, unique = true)
     private String name;
 
-    @ManyToMany(mappedBy = "tags")
+    @ManyToMany(mappedBy = "tags" ,  cascade = CascadeType.ALL)
     private Set<Candidate> candidates = new HashSet<>();
 
     // Constructors

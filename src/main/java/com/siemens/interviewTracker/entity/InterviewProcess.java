@@ -46,7 +46,7 @@ public class InterviewProcess {
     )
     private Set<Candidate> candidates = new HashSet<>();
 
-    @OneToMany(mappedBy = "interviewProcess")
+    @OneToMany(mappedBy = "interviewProcess" , cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<InterviewStage> interviewStages = new HashSet<>();
 
 }

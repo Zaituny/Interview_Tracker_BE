@@ -28,6 +28,10 @@ public class InterviewStage {
     @Column(name = "name")
     private String name;
 
+    @NotBlank(message = "Stage description cannot be empty")
+    @Column(name = "description")
+    private String description;
+
     @Enumerated(EnumType.STRING) // Save as a string in the database
     @Column(name = "status")
     private InterviewStageStatus status;
