@@ -18,7 +18,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -64,7 +63,7 @@ public class FeedbackService {
             throw new IllegalArgumentException("Limit must be greater than 0 and offset must be non-negative.");
         }
         Pageable pageable = PageRequest.of(offset / limit, limit);
-        Page<Feedback> feedbacks = feedbackRepository.findByCandidate_IdAndStage_Id(candidateId, stageId,pageable);
+        Page<Feedback> feedbacks = feedbackRepository.findByCandidateIdAndStageId(candidateId, stageId,pageable);
         return feedbacks.map(feedbackMapper::toDTO);
     }
 
