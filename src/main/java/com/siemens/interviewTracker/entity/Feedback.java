@@ -28,9 +28,6 @@ public class Feedback {
     @JoinColumn(name="candidate_id", nullable = false)
     private Candidate candidate_id;
 
-    @Column(name="rating", nullable = false)
-    private String rating;
-
     @Column(name="comments")
     private String comments;
 }

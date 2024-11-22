@@ -12,6 +12,5 @@ public class FeedbackDTO {
     private String stageId;
     private String userId;
     private String candidateId;
-    private String rating;
     private String comments;
 }
