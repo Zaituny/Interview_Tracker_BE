@@ -63,34 +63,5 @@ public class InterviewStageService {
         logger.info("Added candidate '{}' to stage '{}'", candidate.getName(), interviewStage.getName());
     }
 
-//    public void moveCandidateToNextStage(UUID candidateId, UUID currentStageId) {
-//        // Fetch the current stage by ID
-//        InterviewStage currentStage = interviewStageRepository.findById(currentStageId)
-//                .orElseThrow(() -> new IllegalArgumentException("InterviewStage with ID " + currentStageId + " not found"));
-//
-//        // Fetch the candidate by ID
-//        Candidate candidate = candidateRepository.findById(candidateId)
-//                .orElseThrow(() -> new IllegalArgumentException("Candidate with ID " + candidateId + " not found"));
-//
-//        // Validate that the candidate is part of the same interview process
-//        if (!currentStage.getCandidates().contains(candidate)) {
-//            throw new IllegalArgumentException("Candidate with ID " + candidateId + " is not part of the interview stage");
-//        }
-//
-//        // Get the next stage in the interview process
-//        InterviewStage nextStage = interviewStageRepository.findNextStage(currentStage.getInterviewProcess().getId(),(1+currentStage.getStageOrder()))
-//                .orElseThrow(() -> new IllegalArgumentException("No next stage found for the interview process"));
-//
-//        // Remove the candidate from the current stage
-//        currentStage.getCandidates().remove(candidate);
-//
-//        // Add the candidate to the next stage
-//        nextStage.getCandidates().add(candidate);
-//
-//        // Save both the updated stages
-//        interviewStageRepository.save(currentStage);
-//        interviewStageRepository.save(nextStage);
-//
-//        logger.info("Moved candidate '{}' from stage '{}' to stage '{}'", candidate.getName(), currentStage.getName(), nextStage.getName());
-//    }
+
 }

@@ -10,6 +10,7 @@ import com.siemens.interviewTracker.dto.CandidateDTO;
 import com.siemens.interviewTracker.dto.InterviewStageDTO;
 import com.siemens.interviewTracker.entity.Candidate;
 import com.siemens.interviewTracker.entity.InterviewStage;
+import com.siemens.interviewTracker.exception.UserNotFoundException;
 import com.siemens.interviewTracker.mapper.CandidateMapper;
 import com.siemens.interviewTracker.mapper.InterviewStageMapper;
 import com.siemens.interviewTracker.repository.CandidateRepository;
@@ -154,9 +155,6 @@ public class InterviewProcessService {
         }
         InterviewProcess interviewProcess = interviewProcessRepository.findById(id).get();
 
-        interviewProcess.getCandidates().forEach(candidate -> candidate.getInterviewProcesses().remove(interviewProcess));
-        interviewProcess.getCandidates().clear();
-        interviewProcessRepository.save(interviewProcess);
         interviewProcessRepository.delete(interviewProcess);
         logger.info("Interview process deleted with ID: {}", id);
     }
@@ -197,10 +195,10 @@ public class InterviewProcessService {
     public void addCandidateToProcess(UUID candidateId, UUID processId) {
         // Fetch Candidate and InterviewProcess entities by their IDs
         Candidate candidate = candidateRepository.findById(candidateId)
-                .orElseThrow(() -> new RuntimeException("Candidate not found with id: " + candidateId));
+                .orElseThrow(() -> new IllegalArgumentException("Candidate not found with id: " + candidateId));
 
         InterviewProcess interviewProcess = interviewProcessRepository.findById(processId)
-                .orElseThrow(() -> new RuntimeException("InterviewProcess not found with id: " + processId));
+                .orElseThrow(() -> new IllegalArgumentException("InterviewProcess not found with id: " + processId));
 
         // Add Candidate to InterviewProcess
         interviewProcess.getCandidates().add(candidate);
@@ -225,6 +223,45 @@ public class InterviewProcessService {
         candidateRepository.save(candidate);
         interviewProcessRepository.save(interviewProcess);
     }
+
+    @Transactional
+    public void addBulkCandidatesToProcess(UUID processId, List<UUID> candidateIds) {
+        logger.debug("Adding bulk candidates to process ID: {}", processId);
+
+        // Fetch the InterviewProcess
+        InterviewProcess interviewProcess = interviewProcessRepository.findById(processId)
+                .orElseThrow(() -> new IllegalArgumentException("InterviewProcess not found with id: " + processId));
+
+        // Fetch all candidates by their IDs
+        List<Candidate> candidates = candidateRepository.findAllById(candidateIds);
+        if (candidates.size() != candidateIds.size()) {
+            logger.error("Some candidates not found. Expected: {}, Found: {}", candidateIds.size(), candidates.size());
+            throw new UserNotFoundException("Some candidates not found or invalid candidate IDs provided.");
+        }
+
+        // Add candidates to the process
+        interviewProcess.getCandidates().addAll(candidates);
+
+        // Add the candidates to the first stage of the process, if it exists
+        Pageable pageable = PageRequest.of(0, 1);  // Fetch the first stage only
+        List<InterviewStage> stages = interviewStageRepository.findStagesByInterviewProcessId(processId, pageable);
+        InterviewStage firstStage = stages.isEmpty() ? null : stages.get(0);
+
+        if (firstStage != null) {
+            candidates.forEach(candidate -> {
+                firstStage.getCandidates().add(candidate);
+                candidate.getInterviewStages().add(firstStage);
+            });
+            interviewStageRepository.save(firstStage); // Persist changes in the stage
+        }
+
+        // Persist changes in the process
+        interviewProcessRepository.save(interviewProcess);
+
+        logger.info("Bulk candidates added to process ID: {}", processId);
+    }
+
+
 
     public InterviewStageDTO addStageToProcess(InterviewStageDTO interviewStageDTO) {
         // Validate that the process exists using the processId from the DTO

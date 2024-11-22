@@ -1,6 +1,7 @@
 package com.siemens.interviewTracker.mapper;
 
 import com.siemens.interviewTracker.entity.Candidate;
+import com.siemens.interviewTracker.entity.InterviewStage;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -13,18 +14,33 @@ import java.util.stream.Collectors;
 @Mapper(componentModel = "spring")
 public interface InterviewProcessMapper {
 
+    // Map candidates and stages to their respective UUID sets
     @Mapping(target = "candidateIds", source = "candidates", qualifiedByName = "mapCandidatesToIds")
+    @Mapping(target = "interviewStageIds", source = "interviewStages", qualifiedByName = "mapStagesToIds")
     InterviewProcessDTO toDTO(InterviewProcess interviewProcess);
 
     InterviewProcess toEntity(InterviewProcessDTO interviewProcessDTO);
 
+    // Helper method to map candidates to UUIDs
     @Named("mapCandidatesToIds")
     default Set<UUID> mapCandidatesToIds(Set<Candidate> candidates) {
         if (candidates == null) {
             return null;
         }
         return candidates.stream()
-                .map(Candidate::getId)  // Extracting IDs from Candidate
+                .map(Candidate::getId)
+                .collect(Collectors.toSet());
+    }
+
+    // Helper method to map stages to UUIDs
+    @Named("mapStagesToIds")
+    default Set<UUID> mapStagesToIds(Set<InterviewStage> stages) {
+        if (stages == null) {
+            return null;
+        }
+        return stages.stream()
+                .map(InterviewStage::getId)
                 .collect(Collectors.toSet());
     }
 }
+
