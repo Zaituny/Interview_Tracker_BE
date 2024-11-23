@@ -23,6 +23,8 @@ import jakarta.validation.Validator;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import jakarta.validation.ConstraintViolation;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
@@ -76,22 +78,39 @@ public class InterviewProcessService {
             throw new IllegalArgumentException("InterviewProcess cannot be null");
         }
 
+        // Set additional fields
         interviewProcessDTO.setCreatedAt(LocalDateTime.now());
         interviewProcessDTO.setStatus(NOT_STARTED_YET);
 
+        // Retrieve the user email from the security context
+        String userEmail = getCurrentUserEmail();
+        interviewProcessDTO.setCreatedBy(userEmail);
+
+        logger.info("Creating interview process by user: {}", userEmail);
+
+        // Validate the DTO
         Set<ConstraintViolation<InterviewProcessDTO>> violations = validator.validate(interviewProcessDTO);
         if (!violations.isEmpty()) {
             logger.error("Validation errors: {}", getValidationErrors(violations));
             throw new IllegalArgumentException("Validation errors: " + getValidationErrors(violations));
         }
 
-
+        // Map to entity and save
         InterviewProcess interviewProcess = interviewProcessMapper.toEntity(interviewProcessDTO);
-
         InterviewProcess savedInterviewProcess = interviewProcessRepository.save(interviewProcess);
+
         logger.info("Interview process created with ID: {}", savedInterviewProcess.getId());
         return interviewProcessMapper.toDTO(savedInterviewProcess);
     }
+
+    private String getCurrentUserEmail() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof String) {
+            return (String) authentication.getPrincipal();
+        }
+        throw new RuntimeException("User email not found in the security context");
+    }
+
 
     public Page<InterviewProcessDTO> getAllInterviewProcesses(int limit, int offset) {
         logger.debug("Fetching all interview processes with limit: {}, offset: {}", limit, offset);

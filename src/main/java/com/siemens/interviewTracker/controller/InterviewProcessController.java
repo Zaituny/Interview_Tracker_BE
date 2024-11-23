@@ -4,10 +4,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import com.siemens.interviewTracker.dto.CandidateDTO;
-
 import com.siemens.interviewTracker.dto.InterviewStageDTO;
 import com.siemens.interviewTracker.dto.StageDetailsDTO;
+import com.siemens.interviewTracker.exception.UserNotFoundException;
+import jakarta.validation.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import jakarta.validation.Valid;
@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.validation.annotation.Validated;
 import com.siemens.interviewTracker.dto.InterviewProcessDTO;
 import com.siemens.interviewTracker.service.InterviewProcessService;
-
 
 @Validated
 @RestController
@@ -32,12 +31,16 @@ public class InterviewProcessController {
     }
 
     @PostMapping
-    public ResponseEntity<InterviewProcessDTO> createInterviewProcess(@Valid @RequestBody InterviewProcessDTO interviewProcessDTO) {
+    public ResponseEntity<InterviewProcessDTO> createInterviewProcess( @RequestBody InterviewProcessDTO interviewProcessDTO) {
         logger.info("Creating interview process with title: {}", interviewProcessDTO.getTitle());
+
+        // Pass the DTO to the service; service handles setting `createdBy`
         InterviewProcessDTO createdInterviewProcess = interviewProcessService.createInterviewProcess(interviewProcessDTO);
+
         logger.info("Interview process created with ID: {}", createdInterviewProcess.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(createdInterviewProcess);
     }
+
 
     @GetMapping
     public ResponseEntity<List<InterviewProcessDTO>> getAllInterviewProcesses(@RequestParam(defaultValue = "10") int limit,
@@ -75,7 +78,7 @@ public class InterviewProcessController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/add-candidate")
+    @PostMapping("/{processId}/candidate")
     public ResponseEntity<String> addCandidateToProcess(@RequestParam UUID candidateId, @RequestParam UUID processId) {
         logger.info("adding candidate with ID: {}", candidateId);
         interviewProcessService.addCandidateToProcess(candidateId, processId);
@@ -83,7 +86,7 @@ public class InterviewProcessController {
     }
 
 
-    @PostMapping("/add-stage")
+    @PostMapping("/{processId}/stages")
     public ResponseEntity<InterviewStageDTO> addStageToProcess(@Valid @RequestBody InterviewStageDTO interviewStageDTO) {
         try {
             InterviewStageDTO createdStage = interviewProcessService.addStageToProcess(interviewStageDTO);
@@ -111,4 +114,21 @@ public class InterviewProcessController {
             return ResponseEntity.status(500).body(Collections.emptyList());
         }
     }
+
+    @PostMapping("/{processId}/candidates")
+    public ResponseEntity<String> addBulkCandidatesToProcess(
+            @PathVariable UUID processId,
+            @RequestBody List<UUID> candidateIds) {
+        try {
+            interviewProcessService.addBulkCandidatesToProcess(processId, candidateIds);
+            return ResponseEntity.ok("Candidates added successfully to process " + processId);
+        } catch (UserNotFoundException e) {
+            logger.error("Error adding candidates: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (ValidationException e) {
+            logger.error("Validation error: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
 }
