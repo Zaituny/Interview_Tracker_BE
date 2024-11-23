@@ -131,4 +131,19 @@ public class InterviewProcessController {
         }
     }
 
+    @PostMapping("/{processId}/candidates/{candidateId}/stages/{stageId}/move-next")
+    public ResponseEntity<String> moveCandidateToNextStage(
+            @PathVariable UUID processId,
+            @PathVariable UUID candidateId,
+            @PathVariable UUID stageId) {
+        try {
+            interviewProcessService.addCandidateToNextStage(candidateId, stageId, processId);
+            return ResponseEntity.ok("Candidate moved to the next stage successfully.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
+        }
+    }
+
 }
