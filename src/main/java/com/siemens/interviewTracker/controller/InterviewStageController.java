@@ -81,4 +81,19 @@ public class InterviewStageController {
             return ResponseEntity.status(500).build();
         }
     }
+
+    @PostMapping("/{interviewStageId}/add-interviewers")
+    public ResponseEntity<Void> addInterviewersToInterviewStage(@PathVariable UUID interviewStageId,
+                                                                @RequestBody List<UUID> interviewerIds) {
+        try {
+            interviewStageService.addInterviewersToInterviewStage(interviewStageId, interviewerIds);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            logger.error("Error adding interviewer to stage: {}", e.getMessage());
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            logger.error("Unexpected error occurred: {}", e.getMessage());
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }
