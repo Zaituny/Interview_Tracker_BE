@@ -54,4 +54,8 @@ public class Candidate {
 
     @ManyToMany(mappedBy = "candidates")
     private Set<InterviewStage> interviewStages = new HashSet<>();
+
+    @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL)
+    private Set<CandidateStatus> candidateStatuses = new HashSet<>();
+
 }
