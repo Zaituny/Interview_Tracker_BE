@@ -330,13 +330,13 @@ public class InterviewProcessService {
 
         // Ensure the candidate is part of the process
         if (!process.getCandidates().contains(candidate)) {
-            throw new IllegalArgumentException("Candidate is not part of the process with id: " + process.getId());
+            throw new IllegalArgumentException("Candidate is not part of the process with id: " + processId);
         }
 
         // Find the next stage in the process
         int nextStageOrder = currentStage.getStageOrder() + 1;
-        InterviewStage nextStage = interviewStageRepository.findByInterviewProcessIdAndStageOrder(process.getId(), nextStageOrder)
-                .orElseThrow(() -> new IllegalArgumentException("No next stage found for process with id: " + process.getId()));
+        InterviewStage nextStage = interviewStageRepository.findByInterviewProcessIdAndStageOrder(processId, nextStageOrder)
+                .orElseThrow(() -> new IllegalArgumentException("No next stage found for process with id: " + processId));
 
         // Add the candidate to the next stage
         nextStage.getCandidates().add(candidate);
@@ -344,7 +344,7 @@ public class InterviewProcessService {
         // Persist the changes
         interviewStageRepository.save(nextStage);
 
-        logger.info("Candidate {} added to stage {} in process {}", candidateId, nextStage.getStageOrder(), process.getId());
+        logger.info("Candidate {} added to stage {} in process {}", candidateId, nextStage.getStageOrder(), processId);
     }
 
 }
