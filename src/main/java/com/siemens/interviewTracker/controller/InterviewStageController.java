@@ -81,4 +81,23 @@ public class InterviewStageController {
             return ResponseEntity.status(500).build();
         }
     }
+
+    @DeleteMapping("/{stageId}")
+    public ResponseEntity<Void> deleteStage(@PathVariable UUID stageId) {
+        try {
+            interviewStageService.deleteInterviewStage(stageId);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalStateException e) {
+            logger.error("Deletion restriction: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(null); // Return 409 Conflict
+        } catch (IllegalArgumentException e) {
+            logger.error("Error deleting interview stage: {}", e.getMessage());
+            return ResponseEntity.badRequest().build(); // Return 400 Bad Request
+        } catch (Exception e) {
+            logger.error("Unexpected error occurred: {}", e.getMessage());
+            return ResponseEntity.status(500).build(); // Return 500 Internal Server Error
+        }
+    }
+
+    
 }

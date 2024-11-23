@@ -220,21 +220,25 @@ public class InterviewProcessService {
                 .orElseThrow(() -> new IllegalArgumentException("InterviewProcess not found with id: " + processId));
 
         // Add Candidate to InterviewProcess
-        interviewProcess.getCandidates().add(candidate);
+        if (!interviewProcess.getCandidates().contains(candidate)) {
+            interviewProcess.getCandidates().add(candidate);
+        }
+        if (!candidate.getInterviewProcesses().contains(interviewProcess)) {
+            candidate.getInterviewProcesses().add(interviewProcess);
+        }
 
-        // Add InterviewProcess to Candidate
-        candidate.getInterviewProcesses().add(interviewProcess);
 
         // Check for the first stage in the process
-
-        Pageable pageable = PageRequest.of(0, 1);  // Limit to the first result
-        List<InterviewStage> stages = interviewStageRepository.findStagesByInterviewProcessId(processId, pageable);
-        InterviewStage firstStage = stages.isEmpty() ? null : stages.get(0);
+        InterviewStage firstStage = interviewStageRepository.findFirstStageByProcessId(processId)
+                .orElse(null);
 
         if (firstStage != null) {
-            // Add Candidate to the first stage
-            firstStage.getCandidates().add(candidate);
-            candidate.getInterviewStages().add(firstStage);
+            if (!firstStage.getCandidates().contains(candidate)) {
+                firstStage.getCandidates().add(candidate);
+            }
+            if (!candidate.getInterviewStages().contains(firstStage)) {
+                candidate.getInterviewStages().add(firstStage);
+            }
             interviewStageRepository.save(firstStage); // Persist the change in the stage
         }
 
@@ -262,9 +266,9 @@ public class InterviewProcessService {
         interviewProcess.getCandidates().addAll(candidates);
 
         // Add the candidates to the first stage of the process, if it exists
-        Pageable pageable = PageRequest.of(0, 1);  // Fetch the first stage only
-        List<InterviewStage> stages = interviewStageRepository.findStagesByInterviewProcessId(processId, pageable);
-        InterviewStage firstStage = stages.isEmpty() ? null : stages.get(0);
+        // Check for the first stage in the process
+        InterviewStage firstStage = interviewStageRepository.findFirstStageByProcessId(processId)
+                .orElse(null);
 
         if (firstStage != null) {
             candidates.forEach(candidate -> {
