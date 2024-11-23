@@ -104,6 +104,44 @@ public class InterviewStageService {
         return interviewerCount;
     }
 
+    @Transactional
+    public void deleteInterviewStage(UUID stageId) {
+        logger.info("Attempting to delete interview stage with ID: {}", stageId);
+
+        // Fetch the stage to ensure it exists
+        InterviewStage stage = interviewStageRepository.findById(stageId)
+                .orElseThrow(() -> new IllegalArgumentException("InterviewStage with ID " + stageId + " not found"));
+
+        // Restrict deletion if the stage has candidates
+        if (!stage.getCandidates().isEmpty()) {
+            throw new IllegalStateException("Cannot delete stage with ID " + stageId + " because it has associated candidates.");
+        }
+
+        // Cascade stage order numbering for other stages in the process
+        cascadeStageOrderAfterDeletion(stage);
+
+        // Delete the stage
+        interviewStageRepository.delete(stage);
+        logger.info("Deleted interview stage with ID: {}", stageId);
+    }
+
+    private void cascadeStageOrderAfterDeletion(InterviewStage stage) {
+        logger.info("Cascading stage order numbering for process ID: {}", stage.getInterviewProcess().getId());
+
+        // Get all stages in the process with stage_order greater than the deleted stage
+        List<InterviewStage> subsequentStages = interviewStageRepository.findByInterviewProcessIdAndStageOrderGreaterThan(
+                stage.getInterviewProcess().getId(), stage.getStageOrder());
+
+        // Decrement the stage order for each subsequent stage
+        subsequentStages.forEach(subsequentStage -> {
+            subsequentStage.setStageOrder(subsequentStage.getStageOrder() - 1);
+            interviewStageRepository.save(subsequentStage); // Save changes
+        });
+
+        logger.info("Stage order numbering adjusted successfully.");
+    }
+
+
     public void addInterviewersToInterviewStage(UUID stageId, List<UUID> interviewerIds){
         logger.debug("Adding interviewers to stage with ID: {}", stageId);
         InterviewStage interviewStage = interviewStageRepository.findById(stageId)
@@ -121,4 +159,5 @@ public class InterviewStageService {
         interviewStageRepository.save(interviewStage);
         logger.info("Added interviewers to stage with ID: {}", stageId);
     }
+
 }
