@@ -39,6 +39,8 @@ public interface InterviewStageRepository extends JpaRepository<InterviewStage, 
     ORDER BY s.stageOrder ASC
 """)
     List<StageDetailsDTO> findStageDetailsByProcessId(@Param("processId")UUID processId);
+
+    Optional<InterviewStage> findByInterviewProcessIdAndStageOrder(UUID processId, int stageOrder);
 }
 
 

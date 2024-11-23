@@ -280,8 +280,6 @@ public class InterviewProcessService {
         logger.info("Bulk candidates added to process ID: {}", processId);
     }
 
-
-
     public InterviewStageDTO addStageToProcess(InterviewStageDTO interviewStageDTO) {
         // Validate that the process exists using the processId from the DTO
         InterviewProcess interviewProcess = interviewProcessRepository.findById(interviewStageDTO.getInterviewProcessId())
@@ -314,5 +312,39 @@ public class InterviewProcessService {
         return interviewStageMapper.interviewStageToInterviewStageDTO(savedStage);
     }
 
+    @Transactional
+    public void addCandidateToNextStage(UUID candidateId, UUID currentStageId , UUID processId) {
+        logger.debug("Adding candidate {} to the next stage of process associated with stage {}", candidateId, currentStageId);
+
+        // Fetch the current stage
+        InterviewStage currentStage = interviewStageRepository.findById(currentStageId)
+                .orElseThrow(() -> new IllegalArgumentException("Stage not found with id: " + currentStageId));
+
+        // Fetch the process associated with the stage
+        InterviewProcess process = interviewProcessRepository.findById(processId)
+                .orElseThrow(() -> new IllegalArgumentException("process not found with id: " + processId));
+
+        // Fetch the candidate
+        Candidate candidate = candidateRepository.findById(candidateId)
+                .orElseThrow(() -> new IllegalArgumentException("Candidate not found with id: " + candidateId));
+
+        // Ensure the candidate is part of the process
+        if (!process.getCandidates().contains(candidate)) {
+            throw new IllegalArgumentException("Candidate is not part of the process with id: " + process.getId());
+        }
+
+        // Find the next stage in the process
+        int nextStageOrder = currentStage.getStageOrder() + 1;
+        InterviewStage nextStage = interviewStageRepository.findByInterviewProcessIdAndStageOrder(process.getId(), nextStageOrder)
+                .orElseThrow(() -> new IllegalArgumentException("No next stage found for process with id: " + process.getId()));
+
+        // Add the candidate to the next stage
+        nextStage.getCandidates().add(candidate);
+
+        // Persist the changes
+        interviewStageRepository.save(nextStage);
+
+        logger.info("Candidate {} added to stage {} in process {}", candidateId, nextStage.getStageOrder(), process.getId());
+    }
 
 }
