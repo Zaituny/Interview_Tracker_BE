@@ -104,7 +104,6 @@ public class InterviewStageService {
         return interviewerCount;
     }
 
-<<<<<<< HEAD
     @Transactional
     public void deleteInterviewStage(UUID stageId) {
         logger.info("Attempting to delete interview stage with ID: {}", stageId);
@@ -142,7 +141,7 @@ public class InterviewStageService {
         logger.info("Stage order numbering adjusted successfully.");
     }
 
-=======
+
     public void addInterviewersToInterviewStage(UUID stageId, List<UUID> interviewerIds){
         logger.debug("Adding interviewers to stage with ID: {}", stageId);
         InterviewStage interviewStage = interviewStageRepository.findById(stageId)
@@ -160,5 +159,5 @@ public class InterviewStageService {
         interviewStageRepository.save(interviewStage);
         logger.info("Added interviewers to stage with ID: {}", stageId);
     }
->>>>>>> main
+
 }

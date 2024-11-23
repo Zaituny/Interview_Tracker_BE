@@ -82,7 +82,6 @@ public class InterviewStageController {
         }
     }
 
-<<<<<<< HEAD
     @DeleteMapping("/{stageId}")
     public ResponseEntity<Void> deleteStage(@PathVariable UUID stageId) {
         try {
@@ -100,8 +99,7 @@ public class InterviewStageController {
         }
     }
 
-    
-=======
+
     @PostMapping("/{interviewStageId}/add-interviewers")
     public ResponseEntity<Void> addInterviewersToInterviewStage(@PathVariable UUID interviewStageId,
                                                                 @RequestBody List<UUID> interviewerIds) {
@@ -116,5 +114,4 @@ public class InterviewStageController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
->>>>>>> main
 }
