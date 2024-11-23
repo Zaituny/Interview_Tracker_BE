@@ -18,6 +18,8 @@ public interface InterviewStageMapper {
     @Mapping(source = "interviewProcess.id", target = "interviewProcessId")
     @Mapping(target = "candidateIds", source = "candidates", qualifiedByName = "mapCandidatesToIds")
     @Mapping(target = "interviewerIds", source = "interviewers", qualifiedByName = "mapUsersToIds")
+    @Mapping(target = "candidatesCount", expression = "java(interviewStage.getCandidates() != null ? interviewStage.getCandidates().size() : 0)")
+    @Mapping(target = "interviewersCount", expression = "java(interviewStage.getInterviewers() != null ? interviewStage.getInterviewers().size() : 0)")
     InterviewStageDTO interviewStageToInterviewStageDTO(InterviewStage interviewStage);
 
     @Mapping(source = "interviewProcessId", target = "interviewProcess.id")

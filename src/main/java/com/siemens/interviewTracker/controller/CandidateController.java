@@ -89,4 +89,21 @@ public class CandidateController {
         Page<CandidateDTO> candidates = candidateService.getCandidatesInInterviewProcess(interviewProcessId, limit, offset);
         return ResponseEntity.ok(candidates);
     }
+
+    @GetMapping("/interview-stage/{interviewStageId}")
+    public ResponseEntity<Page<CandidateDTO>> getCandidatesByInterviewStage(
+            @PathVariable UUID interviewStageId,
+            @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(defaultValue = "0") int offset) {
+        logger.info("Fetching candidates for interview stage ID: {}, with limit: {}, offset: {}", interviewStageId, limit, offset);
+        if (limit <= 0 || limit > 100) {
+            throw new IllegalArgumentException("Limit must be between 1 and 100.");
+        }
+        if (offset < 0) {
+            throw new IllegalArgumentException("Offset must be non-negative.");
+        }
+
+        Page<CandidateDTO> candidates = candidateService.getCandidatesInInterviewStage(interviewStageId, limit, offset);
+        return ResponseEntity.ok(candidates);
+    }
 }

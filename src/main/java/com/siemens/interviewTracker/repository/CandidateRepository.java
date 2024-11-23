@@ -4,6 +4,7 @@ import java.util.UUID;
 import java.util.Optional;
 
 import com.siemens.interviewTracker.entity.InterviewProcess;
+import com.siemens.interviewTracker.entity.InterviewStage;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
@@ -19,4 +20,6 @@ public interface CandidateRepository extends JpaRepository<Candidate, UUID> {
     Optional<Candidate> findByPhone(String phone);
 
     Page<Candidate> findByInterviewProcessesContaining(InterviewProcess interviewProcess, Pageable pageable);
+
+    Page<Candidate> findByInterviewStagesContaining(InterviewStage interviewStage, Pageable pageable);
 }

@@ -1,5 +1,6 @@
 package com.siemens.interviewTracker.service;
 
+import com.siemens.interviewTracker.dto.InterviewProcessDTO;
 import com.siemens.interviewTracker.dto.InterviewStageDTO;
 import com.siemens.interviewTracker.entity.Candidate;
 import com.siemens.interviewTracker.entity.InterviewProcess;
@@ -10,6 +11,9 @@ import com.siemens.interviewTracker.repository.InterviewProcessRepository;
 import com.siemens.interviewTracker.repository.InterviewStageRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,7 +42,17 @@ public class InterviewStageService {
         this.candidateRepository = candidateRepository;
     }
 
+    public Page<InterviewStageDTO> getAllInterviewStages(int limit, int offset) {
+        logger.debug("Fetching all interview stages with limit: {}, offset: {}", limit, offset);
 
+        if (limit < 1 || offset < 0) {
+            throw new IllegalArgumentException("Limit must be greater than 0 and offset must be non-negative.");
+        }
+
+        Pageable pageable = PageRequest.of(offset / limit, limit);
+        Page<InterviewStage> interviewStages = interviewStageRepository.findAll(pageable);
+        return interviewStages.map(interviewStageMapper::interviewStageToInterviewStageDTO);
+    }
 
     public void addCandidateToStage(UUID stageId, UUID candidateId) {
         // Fetch the stage by ID
@@ -63,5 +77,23 @@ public class InterviewStageService {
         logger.info("Added candidate '{}' to stage '{}'", candidate.getName(), interviewStage.getName());
     }
 
+    public long getCandidateCountInStage(UUID interviewStageId) {
+        logger.info("Fetching candidate count for interview stage ID: {}", interviewStageId);
+        InterviewStage interviewStage = interviewStageRepository.findById(interviewStageId)
+                .orElseThrow(() -> new IllegalArgumentException("InterviewStage with ID " + interviewStageId + " not found"));
 
+        long candidateCount = interviewStage.getCandidates().size();
+        logger.info("Candidate count for stage '{}': {}", interviewStage.getName(), candidateCount);
+        return candidateCount;
+    }
+
+    public long getInterviewerCountInStage(UUID interviewStageId) {
+        logger.info("Fetching interviewer count for interview stage ID: {}", interviewStageId);
+        InterviewStage interviewStage = interviewStageRepository.findById(interviewStageId)
+                .orElseThrow(() -> new IllegalArgumentException("InterviewStage with ID " + interviewStageId + " not found"));
+
+        long interviewerCount = interviewStage.getInterviewers().size();
+        logger.info("Interviewer count for stage '{}': {}", interviewStage.getName(), interviewerCount);
+        return interviewerCount;
+    }
 }

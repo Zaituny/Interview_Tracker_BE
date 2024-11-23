@@ -1,5 +1,6 @@
 package com.siemens.interviewTracker.controller;
 
+import com.siemens.interviewTracker.dto.InterviewProcessDTO;
 import com.siemens.interviewTracker.dto.InterviewStageDTO;
 import com.siemens.interviewTracker.service.InterviewStageService;
 import org.slf4j.Logger;
@@ -9,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -21,6 +23,21 @@ public class InterviewStageController {
 
     public InterviewStageController(InterviewStageService interviewStageService) {
         this.interviewStageService = interviewStageService;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<InterviewStageDTO>> getAllInterviewStages(@RequestParam(defaultValue = "10") int limit,
+                                                                              @RequestParam(defaultValue = "0") int offset) {
+        logger.info("Fetching interview stages with limit: {}, offset: {}", limit, offset);
+        if (limit <= 0 || limit > 100) {
+            throw new IllegalArgumentException("Limit must be between 1 and 100.");
+        }
+        if (offset < 0) {
+            throw new IllegalArgumentException("Offset must be non-negative.");
+        }
+
+        List<InterviewStageDTO> interviewStages = interviewStageService.getAllInterviewStages(limit, offset).getContent();
+        return ResponseEntity.ok(interviewStages);
     }
 
     @PostMapping("/{stageId}/add-candidate/{candidateId}")
@@ -37,18 +54,31 @@ public class InterviewStageController {
         }
     }
 
-//    @PostMapping("/{stageId}/move-candidate/{candidateId}")
-//    public ResponseEntity<Void> moveCandidateToNextStage(@PathVariable UUID stageId, @PathVariable UUID candidateId) {
-//        try {
-//            interviewStageService.moveCandidateToNextStage(candidateId, stageId);
-//            return new ResponseEntity<>(HttpStatus.OK);
-//        } catch (IllegalArgumentException e) {
-//            logger.error("Error moving candidate to next stage: {}", e.getMessage());
-//            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-//        } catch (Exception e) {
-//            logger.error("Unexpected error occurred: {}", e.getMessage());
-//            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-//    }
+    @GetMapping("/{interviewStageId}/candidates-count")
+    public ResponseEntity<Long> getCandidateCount(@PathVariable UUID interviewStageId) {
+        try {
+            long count = interviewStageService.getCandidateCountInStage(interviewStageId);
+            return ResponseEntity.ok(count);
+        } catch (IllegalArgumentException e) {
+            logger.error("Error fetching candidate count: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            logger.error("Unexpected error occurred: {}", e.getMessage());
+            return ResponseEntity.status(500).build();
+        }
+    }
 
+    @GetMapping("/{interviewStageId}/interviewers-count")
+    public ResponseEntity<Long> getInterviewerCount(@PathVariable UUID interviewStageId) {
+        try {
+            long count = interviewStageService.getInterviewerCountInStage(interviewStageId);
+            return ResponseEntity.ok(count);
+        } catch (IllegalArgumentException e) {
+            logger.error("Error fetching interviewer count: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            logger.error("Unexpected error occurred: {}", e.getMessage());
+            return ResponseEntity.status(500).build();
+        }
+    }
 }

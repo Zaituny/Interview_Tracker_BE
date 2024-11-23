@@ -4,11 +4,13 @@ import com.siemens.interviewTracker.dto.CandidateDTO;
 import com.siemens.interviewTracker.dto.InterviewProcessDTO;
 import com.siemens.interviewTracker.entity.Candidate;
 import com.siemens.interviewTracker.entity.InterviewProcess;
+import com.siemens.interviewTracker.entity.InterviewStage;
 import com.siemens.interviewTracker.exception.CandidateDeletionException;
 import com.siemens.interviewTracker.exception.DuplicateFieldException;
 import com.siemens.interviewTracker.mapper.CandidateMapper;
 import com.siemens.interviewTracker.repository.CandidateRepository;
 import com.siemens.interviewTracker.repository.InterviewProcessRepository;
+import com.siemens.interviewTracker.repository.InterviewStageRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
@@ -38,15 +40,17 @@ public class CandidateService {
     private final CandidateRepository candidateRepository;
     private final InterviewProcessRepository interviewProcessRepository;
     private static final Logger logger = LoggerFactory.getLogger(CandidateService.class);
+    private final InterviewStageRepository interviewStageRepository;
 
     public CandidateService(Validator validator,
                             CandidateMapper candidateMapper,
                             CandidateRepository candidateRepository,
-                            InterviewProcessRepository interviewProcessRepository) {
+                            InterviewProcessRepository interviewProcessRepository, InterviewStageRepository interviewStageRepository) {
         this.validator = validator;
         this.candidateMapper = candidateMapper;
         this.candidateRepository = candidateRepository;
         this.interviewProcessRepository = interviewProcessRepository;
+        this.interviewStageRepository = interviewStageRepository;
     }
 
     public CandidateDTO createCandidate(CandidateDTO candidateDTO) {
@@ -218,6 +222,26 @@ public class CandidateService {
 
         Pageable pageable = PageRequest.of(offset / limit, limit);
         Page<Candidate> candidates = candidateRepository.findByInterviewProcessesContaining(interviewProcess, pageable);
+
+        return  candidates.map(candidateMapper::toDTO);
+    }
+
+    public Page<CandidateDTO> getCandidatesInInterviewStage(UUID interviewStageId, int limit, int offset) {
+        logger.debug("Fetching candidates for interview stage with ID: {}. Limit: {}, Offset: {}", interviewStageId, limit, offset);
+
+        if (limit < 1 || offset < 0) {
+            throw new IllegalArgumentException("Limit and offset must be greater than 0");
+        }
+
+        if (interviewStageId == null) {
+            throw new IllegalArgumentException("Interview stage id cannot be null");
+        }
+
+        InterviewStage interviewStage = interviewStageRepository.findById(interviewStageId)
+                .orElseThrow(() -> new EntityNotFoundException("Interview stage with ID " + interviewStageId + " not found"));
+
+        Pageable pageable = PageRequest.of(offset / limit, limit);
+        Page<Candidate> candidates = candidateRepository.findByInterviewStagesContaining(interviewStage, pageable);
 
         return  candidates.map(candidateMapper::toDTO);
     }

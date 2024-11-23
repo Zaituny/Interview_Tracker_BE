@@ -31,4 +31,7 @@ public class InterviewStageDTO {
 
     private Set<UUID> candidateIds;
     private Set<UUID> interviewerIds;
+
+    private long candidatesCount;
+    private long interviewersCount;
 }
