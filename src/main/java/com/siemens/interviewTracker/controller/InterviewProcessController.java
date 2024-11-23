@@ -8,6 +8,8 @@ import com.siemens.interviewTracker.dto.CandidateDTO;
 
 import com.siemens.interviewTracker.dto.InterviewStageDTO;
 import com.siemens.interviewTracker.dto.StageDetailsDTO;
+import com.siemens.interviewTracker.exception.UserNotFoundException;
+import jakarta.validation.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import jakarta.validation.Valid;
@@ -75,7 +77,7 @@ public class InterviewProcessController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/add-candidate")
+    @PostMapping("/{processId}/candidate")
     public ResponseEntity<String> addCandidateToProcess(@RequestParam UUID candidateId, @RequestParam UUID processId) {
         logger.info("adding candidate with ID: {}", candidateId);
         interviewProcessService.addCandidateToProcess(candidateId, processId);
@@ -83,7 +85,7 @@ public class InterviewProcessController {
     }
 
 
-    @PostMapping("/add-stage")
+    @PostMapping("/{processId}/stages")
     public ResponseEntity<InterviewStageDTO> addStageToProcess(@Valid @RequestBody InterviewStageDTO interviewStageDTO) {
         try {
             InterviewStageDTO createdStage = interviewProcessService.addStageToProcess(interviewStageDTO);
@@ -111,4 +113,21 @@ public class InterviewProcessController {
             return ResponseEntity.status(500).body(Collections.emptyList());
         }
     }
+
+    @PostMapping("/{processId}/candidates")
+    public ResponseEntity<String> addBulkCandidatesToProcess(
+            @PathVariable UUID processId,
+            @RequestBody List<UUID> candidateIds) {
+        try {
+            interviewProcessService.addBulkCandidatesToProcess(processId, candidateIds);
+            return ResponseEntity.ok("Candidates added successfully to process " + processId);
+        } catch (UserNotFoundException e) {
+            logger.error("Error adding candidates: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (ValidationException e) {
+            logger.error("Validation error: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
 }
