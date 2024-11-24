@@ -8,12 +8,12 @@ import java.util.UUID;
 
 import com.siemens.interviewTracker.dto.CandidateDTO;
 import com.siemens.interviewTracker.dto.InterviewStageDTO;
-import com.siemens.interviewTracker.entity.Candidate;
-import com.siemens.interviewTracker.entity.InterviewStage;
+import com.siemens.interviewTracker.entity.*;
 import com.siemens.interviewTracker.exception.UserNotFoundException;
 import com.siemens.interviewTracker.mapper.CandidateMapper;
 import com.siemens.interviewTracker.mapper.InterviewStageMapper;
 import com.siemens.interviewTracker.repository.CandidateRepository;
+import com.siemens.interviewTracker.repository.CandidateStatusRepository;
 import com.siemens.interviewTracker.repository.InterviewStageRepository;
 
 import com.siemens.interviewTracker.dto.StageDetailsDTO;
@@ -29,10 +29,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import com.siemens.interviewTracker.dto.InterviewProcessDTO;
-import com.siemens.interviewTracker.entity.InterviewProcess;
 import com.siemens.interviewTracker.mapper.InterviewProcessMapper;
 import com.siemens.interviewTracker.repository.InterviewProcessRepository;
 
+import static com.siemens.interviewTracker.entity.CandidateProcessStatus.*;
 import static com.siemens.interviewTracker.entity.InterviewProcessStatus.*;
 import static com.siemens.interviewTracker.utils.ValidationUtils.getValidationErrors;
 
@@ -45,7 +45,7 @@ public class InterviewProcessService {
 
     private final InterviewStageMapper interviewStageMapper;
     private final InterviewProcessRepository interviewProcessRepository;
-
+    private final CandidateStatusRepository candidateStatusRepository;
     private final InterviewStageRepository interviewStageRepository;
     private final CandidateRepository candidateRepository;
     private final CandidateMapper candidateMapper;
@@ -60,7 +60,8 @@ public class InterviewProcessService {
             CandidateRepository candidateRepository,
             CandidateMapper candidateMapper,
             InterviewStageRepository interviewStageRepository,
-            InterviewStageMapper interviewStageMapper)
+            InterviewStageMapper interviewStageMapper ,
+            CandidateStatusRepository candidateStatusRepository)
     {
         this.validator = validator;
         this.interviewProcessMapper = interviewProcessMapper;
@@ -69,6 +70,7 @@ public class InterviewProcessService {
         this.candidateRepository = candidateRepository;
         this.interviewStageRepository = interviewStageRepository;
         this.interviewStageMapper = interviewStageMapper;
+        this.candidateStatusRepository = candidateStatusRepository;
     }
 
     public InterviewProcessDTO createInterviewProcess(InterviewProcessDTO interviewProcessDTO) {
@@ -242,6 +244,12 @@ public class InterviewProcessService {
             interviewStageRepository.save(firstStage); // Persist the change in the stage
         }
 
+        CandidateStatus status = new CandidateStatus();
+        status.setCandidate(candidate);
+        status.setInterviewProcess(interviewProcess);
+        status.setStatus(IN_PROGRESS);
+
+        candidateStatusRepository.save(status);
         // Save both entities to persist the relationship
         candidateRepository.save(candidate);
         interviewProcessRepository.save(interviewProcess);
