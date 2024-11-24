@@ -35,4 +35,6 @@ public class CandidateDTO {
     private Set<UUID> interviewProcessIds;
 
     private Set<UUID> interviewStageIds;
+
+    private Set<CandidateStatusDTO> candidateStatuses;
 }

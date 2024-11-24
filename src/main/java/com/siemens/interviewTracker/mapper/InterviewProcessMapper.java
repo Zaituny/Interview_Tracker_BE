@@ -59,6 +59,7 @@ public interface InterviewProcessMapper {
                     dto.setId(status.getId());
                     dto.setCandidateId(status.getCandidate().getId());
                     dto.setStatus(status.getStatus());
+                    dto.setInterviewProcessId(status.getInterviewProcess().getId());
                     return dto;
                 })
                 .collect(Collectors.toSet());

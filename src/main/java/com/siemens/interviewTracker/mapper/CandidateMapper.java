@@ -1,5 +1,7 @@
 package com.siemens.interviewTracker.mapper;
 
+import com.siemens.interviewTracker.dto.CandidateStatusDTO;
+import com.siemens.interviewTracker.entity.CandidateStatus;
 import com.siemens.interviewTracker.entity.InterviewProcess;
 import com.siemens.interviewTracker.entity.InterviewStage;
 import org.mapstruct.Mapper;
@@ -12,12 +14,12 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-
 @Mapper(componentModel = "spring")
 public interface CandidateMapper {
 
     @Mapping(target = "interviewProcessIds", source = "interviewProcesses", qualifiedByName = "mapInterviewProcessesToIds")
     @Mapping(target = "interviewStageIds", source = "interviewStages", qualifiedByName = "mapInterviewStagesToIds")
+    @Mapping(target = "candidateStatuses", source = "candidateStatuses", qualifiedByName = "mapCandidateStatusesToDTOs")
     CandidateDTO toDTO(Candidate candidate);
 
     Candidate toEntity(CandidateDTO candidateDTO);
@@ -28,7 +30,7 @@ public interface CandidateMapper {
             return null;
         }
         return interviewProcesses.stream()
-                .map(InterviewProcess::getId)  // Extracting IDs from InterviewProcess
+                .map(InterviewProcess::getId)
                 .collect(Collectors.toSet());
     }
 
@@ -38,7 +40,24 @@ public interface CandidateMapper {
             return null;
         }
         return interviewStages.stream()
-                .map(InterviewStage::getId)  // Extracting IDs from InterviewProcess
+                .map(InterviewStage::getId)
+                .collect(Collectors.toSet());
+    }
+
+    @Named("mapCandidateStatusesToDTOs")
+    default Set<CandidateStatusDTO> mapCandidateStatusesToDTOs(Set<CandidateStatus> candidateStatuses) {
+        if (candidateStatuses == null) {
+            return null;
+        }
+        return candidateStatuses.stream()
+                .map(candidateStatus -> {
+                    CandidateStatusDTO dto = new CandidateStatusDTO();
+                    dto.setId(candidateStatus.getId());
+                    dto.setCandidateId(candidateStatus.getCandidate().getId());
+                    dto.setInterviewProcessId(candidateStatus.getInterviewProcess().getId());
+                    dto.setStatus(candidateStatus.getStatus());
+                    return dto;
+                })
                 .collect(Collectors.toSet());
     }
 }
