@@ -1,15 +1,11 @@
 package com.siemens.interviewTracker.service;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import com.siemens.interviewTracker.dto.CandidateDTO;
 import com.siemens.interviewTracker.dto.InterviewStageDTO;
-import com.siemens.interviewTracker.entity.Candidate;
-import com.siemens.interviewTracker.entity.InterviewStage;
+import com.siemens.interviewTracker.entity.*;
 import com.siemens.interviewTracker.exception.UserNotFoundException;
 import com.siemens.interviewTracker.mapper.CandidateMapper;
 import com.siemens.interviewTracker.mapper.InterviewStageMapper;
@@ -29,7 +25,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import com.siemens.interviewTracker.dto.InterviewProcessDTO;
-import com.siemens.interviewTracker.entity.InterviewProcess;
 import com.siemens.interviewTracker.mapper.InterviewProcessMapper;
 import com.siemens.interviewTracker.repository.InterviewProcessRepository;
 
@@ -347,4 +342,78 @@ public class InterviewProcessService {
         logger.info("Candidate {} added to stage {} in process {}", candidateId, nextStage.getStageOrder(), processId);
     }
 
+    @Transactional
+    public void rejectCandidate(UUID interviewProcessId, UUID candidateId) {
+        logger.debug("Rejecting candidate with ID: {} for process ID: {}", candidateId, interviewProcessId);
+
+        InterviewProcess interviewProcess = interviewProcessRepository.findById(interviewProcessId)
+                .orElseThrow(() -> new IllegalArgumentException("InterviewProcess not found with id: " + interviewProcessId));
+
+        Candidate candidate = candidateRepository.findById(candidateId)
+                .orElseThrow(() -> new IllegalArgumentException("Candidate not found with id: " + candidateId));
+
+        if (!interviewProcess.getCandidates().contains(candidate)) {
+            logger.error("Candidate with ID: {} is not part of the process with ID: {}", candidateId, interviewProcessId);
+            throw new IllegalArgumentException("Candidate is not part of the given process");
+        }
+
+        CandidateStatus candidateStatus = interviewProcess.getCandidateStatuses()
+                .stream()
+                .filter(status -> status.getCandidate().equals(candidate))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Candidate status not found for the given process"));
+
+        candidateStatus.setStatus(CandidateProcessStatus.REJECTED);
+
+        interviewProcessRepository.save(interviewProcess);
+        logger.info("Candidate with ID: {} has been rejected for process ID: {}", candidateId, interviewProcessId);
+    }
+
+    @Transactional
+    public void rejectCandidates(UUID interviewProcessId, List<UUID> candidateIds) {
+        logger.debug("Rejecting candidates for process ID: {}. Candidates: {}", interviewProcessId, candidateIds);
+
+        InterviewProcess interviewProcess = interviewProcessRepository.findById(interviewProcessId)
+                .orElseThrow(() -> new IllegalArgumentException("InterviewProcess not found with id: " + interviewProcessId));
+
+        List<CandidateStatus> candidateStatuses = candidateRepository.findAllById(candidateIds)
+                .stream()
+                .map(candidate -> {
+                    return interviewProcess.getCandidateStatuses()
+                            .stream()
+                            .filter(status -> status.getCandidate().equals(candidate))
+                            .findFirst()
+                            .orElseThrow(() -> new IllegalArgumentException(
+                                    "Candidate with id " + candidate.getId() + " is not part of the process"));
+                })
+                .toList();
+
+        candidateStatuses.forEach(candidateStatus -> candidateStatus.setStatus(CandidateProcessStatus.REJECTED));
+
+        interviewProcessRepository.save(interviewProcess);
+        logger.info("{} candidates rejected for process ID: {}", candidateIds.size(), interviewProcessId);
+    }
+
+    @Transactional
+    public InterviewStageDTO getCandidateCurrentInterviewStage(UUID interviewProcessId, UUID candidateId) {
+        logger.debug("Fetching current interview stage for candidate ID: {} in process ID: {}", candidateId, interviewProcessId);
+
+        InterviewProcess interviewProcess = interviewProcessRepository.findById(interviewProcessId)
+                .orElseThrow(() -> new IllegalArgumentException("InterviewProcess not found with id: " + interviewProcessId));
+
+        Candidate candidate = candidateRepository.findById(candidateId)
+                .orElseThrow(() -> new IllegalArgumentException("Candidate not found with id: " + candidateId));
+
+        if (interviewProcess.getInterviewStages().isEmpty()) {
+            throw new IllegalStateException("No interview stages found for the given interview process");
+        }
+
+        InterviewStage interviewStage =  interviewProcess.getInterviewStages()
+                .stream()
+                .filter(stage -> stage.getCandidates().contains(candidate))
+                .max(Comparator.comparingInt(InterviewStage::getStageOrder))
+                .orElseThrow(() -> new IllegalArgumentException("No interview stage found for the given candidate in the process"));
+
+        return interviewStageMapper.interviewStageToInterviewStageDTO(interviewStage);
+    }
 }

@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import com.siemens.interviewTracker.dto.InterviewStageDTO;
 import com.siemens.interviewTracker.dto.StageDetailsDTO;
+import com.siemens.interviewTracker.entity.InterviewStage;
 import com.siemens.interviewTracker.exception.UserNotFoundException;
 import jakarta.validation.ValidationException;
 import org.slf4j.Logger;
@@ -146,4 +147,45 @@ public class InterviewProcessController {
         }
     }
 
+    @PostMapping("/{interviewProcessId}/reject-candidate/{candidateId}")
+    public ResponseEntity<String> rejectCandidate(
+            @PathVariable UUID interviewProcessId,
+            @PathVariable UUID candidateId) {
+        logger.debug("API call to reject candidate with ID: {} for process ID: {}", candidateId, interviewProcessId);
+
+        try {
+            interviewProcessService.rejectCandidate(interviewProcessId, candidateId);
+            return ResponseEntity.ok("Candidate rejected successfully.");
+        } catch (IllegalArgumentException e) {
+            logger.error("Error rejecting candidate: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{interviewProcessId}/reject-candidates")
+    public ResponseEntity<String> rejectCandidates(
+            @PathVariable UUID interviewProcessId,
+            @RequestBody List<UUID> candidateIds) {
+        logger.debug("API call to reject candidates for process ID: {}. Candidates: {}", interviewProcessId, candidateIds);
+
+        try {
+            interviewProcessService.rejectCandidates(interviewProcessId, candidateIds);
+            return ResponseEntity.ok("Candidates rejected successfully.");
+        } catch (IllegalArgumentException e) {
+            logger.error("Error rejecting candidates: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/{interviewProcessId}/current-stage")
+    public ResponseEntity<InterviewStageDTO> getCandidateCurrentInterviewStage(
+            @PathVariable UUID interviewProcessId,
+            @RequestParam UUID candidateId) {
+        try {
+            InterviewStageDTO currentStage = interviewProcessService.getCandidateCurrentInterviewStage(interviewProcessId, candidateId);
+            return ResponseEntity.ok(currentStage);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
 }
