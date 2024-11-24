@@ -33,7 +33,6 @@ public interface InterviewStageRepository extends JpaRepository<InterviewStage, 
     Optional<InterviewStage> findFirstStageByProcessId(@Param("processId") UUID processId);
 
 
-
     @Query("""
     SELECT new com.siemens.interviewTracker.dto.StageDetailsDTO(
         s.name,
