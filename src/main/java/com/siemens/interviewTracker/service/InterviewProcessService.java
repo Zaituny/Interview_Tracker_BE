@@ -479,4 +479,41 @@ public class InterviewProcessService {
 
         return interviewStageMapper.interviewStageToInterviewStageDTO(interviewStage);
     }
+
+    @Transactional
+    public void acceptCandidate(UUID interviewProcessId, UUID candidateId) {
+        logger.debug("Accepting candidate with the ID {} for the interview process with the ID {}.", candidateId, interviewProcessId);
+
+        InterviewProcess interviewProcess = interviewProcessRepository.findById(interviewProcessId)
+                .orElseThrow(() -> new IllegalArgumentException("Interview process not found with ID: " + interviewProcessId));
+
+        Candidate candidate = candidateRepository.findById(candidateId)
+                .orElseThrow(() -> new IllegalArgumentException("Candidate not found with ID: " + candidateId));
+
+        if (!interviewProcess.getCandidates().contains(candidate)) {
+            logger.error("Candidate with ID: {} is not part of the process with ID: {}", candidateId, interviewProcessId);
+            throw new IllegalArgumentException("Candidate is not part of the given process");
+        }
+
+        CandidateStatus candidateStatus = interviewProcess.getCandidateStatuses()
+                .stream()
+                .filter(status -> status.getCandidate().equals(candidate))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Candidate status not found for process ID: " + interviewProcessId));
+
+        InterviewStage lastStage = interviewProcess.getInterviewStages()
+                .stream()
+                .max(Comparator.comparingInt(InterviewStage::getStageOrder))
+                .orElseThrow(() -> new IllegalArgumentException("No stages defined for the interview process"));
+
+        if (!candidateStatus.getCurrentStage().equals(lastStage)) {
+            logger.error("Candidate with ID: {} is not in the last stage of the process with ID: {}", candidateId, interviewProcessId);
+            throw new IllegalArgumentException("Candidate is not at the last stage of the process");
+        }
+
+        candidateStatus.setStatus(CandidateProcessStatus.ACCEPTED);
+
+        interviewProcessRepository.save(interviewProcess);
+        logger.info("Candidate {} is accepted for the interview process ID {}", candidateId, interviewProcessId);
+    }
 }

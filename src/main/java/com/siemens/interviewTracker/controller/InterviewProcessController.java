@@ -188,4 +188,21 @@ public class InterviewProcessController {
             return ResponseEntity.badRequest().body(null);
         }
     }
+
+    @PostMapping("/{interviewProcessId}/accept-candidate/{candidateId}")
+    public ResponseEntity<String> acceptCandidate(
+            @PathVariable UUID interviewProcessId,
+            @PathVariable UUID candidateId) {
+        logger.info("Request received to accept candidate ID: {} for interview process ID: {}", candidateId, interviewProcessId);
+        try {
+            interviewProcessService.acceptCandidate(interviewProcessId, candidateId);
+            return ResponseEntity.ok("Candidate successfully accepted.");
+        } catch (IllegalArgumentException ex) {
+            logger.error("Error accepting candidate: {}", ex.getMessage());
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        } catch (Exception ex) {
+            logger.error("Unexpected error occurred while accepting candidate: {}", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred.");
+        }
+    }
 }
