@@ -260,46 +260,49 @@ public class InterviewProcessService {
         InterviewProcess interviewProcess = interviewProcessRepository.findById(processId)
                 .orElseThrow(() -> new IllegalArgumentException("InterviewProcess not found with id: " + processId));
 
-        // Fetch all candidates by their IDs
+        // Fetch all candidates by their IDs and validate
         List<Candidate> candidates = candidateRepository.findAllById(candidateIds);
         if (candidates.size() != candidateIds.size()) {
             logger.error("Some candidates not found. Expected: {}, Found: {}", candidateIds.size(), candidates.size());
             throw new UserNotFoundException("Some candidates not found or invalid candidate IDs provided.");
         }
 
-        // Add candidates to the process
-        interviewProcess.getCandidates().addAll(candidates);
-
-        candidates.forEach(candidate -> {
-            // Create and set CandidateStatus for each candidate
-            CandidateStatus candidateStatus = new CandidateStatus();
-            candidateStatus.setCandidate(candidate);
-            candidateStatus.setInterviewProcess(interviewProcess);
-            candidateStatus.setStatus(CandidateProcessStatus.IN_PROGRESS);
-
-            candidate.getCandidateStatuses().add(candidateStatus);
-            interviewProcess.getCandidateStatuses().add(candidateStatus);
-            candidateStatusRepository.save(candidateStatus);
-        });
-
-        // Add the candidates to the first stage of the process, if it exists
-        Pageable pageable = PageRequest.of(0, 1);  // Fetch the first stage only
+        Pageable pageable = PageRequest.of(0, 1);
+        // Fetch the first stage of the process
         List<InterviewStage> stages = interviewStageRepository.findStagesByInterviewProcessId(processId, pageable);
         InterviewStage firstStage = stages.isEmpty() ? null : stages.get(0);
 
-        if (firstStage != null) {
-            candidates.forEach(candidate -> {
-                firstStage.getCandidates().add(candidate);
-                candidate.getInterviewStages().add(firstStage);
-            });
-            interviewStageRepository.save(firstStage); // Persist changes in the stage
-        }
+        // Process candidates
+        candidates.forEach(candidate -> addCandidateToProcessAndStage(interviewProcess, candidate, firstStage));
 
-        // Persist changes in the process
+        // Persist changes in the first stage and process
+        interviewStageRepository.save(firstStage);
         interviewProcessRepository.save(interviewProcess);
 
-        logger.info("Bulk candidates added to process ID: {}", processId);
+        logger.info("Bulk candidates added to process ID: {} and assigned to the first stage.", processId);
     }
+
+    private void addCandidateToProcessAndStage(InterviewProcess process, Candidate candidate, InterviewStage stage) {
+        // Create and set CandidateStatus
+        CandidateStatus candidateStatus = new CandidateStatus();
+        candidateStatus.setCandidate(candidate);
+        candidateStatus.setInterviewProcess(process);
+        candidateStatus.setCurrentStage(stage);
+        candidateStatus.setStatus(CandidateProcessStatus.IN_PROGRESS);
+
+        // Persist CandidateStatus
+        candidateStatusRepository.save(candidateStatus);
+
+        // Add candidate to process and stage
+        process.getCandidates().add(candidate);
+        process.getCandidateStatuses().add(candidateStatus);
+        stage.getCandidates().add(candidate);
+
+        // Maintain bidirectional relationships
+        candidate.getCandidateStatuses().add(candidateStatus);
+        candidate.getInterviewStages().add(stage);
+    }
+
 
     public InterviewStageDTO addStageToProcess(InterviewStageDTO interviewStageDTO) {
         // Validate that the process exists using the processId from the DTO
@@ -317,6 +320,14 @@ public class InterviewProcessService {
         // If this is the first stage, add all candidates of the process to the stage
         if (nextStageOrder == 1) {
             interviewStage.setCandidates(new HashSet<>(interviewProcess.getCandidates()));
+            for (Candidate candidate : interviewProcess.getCandidates()) {
+                CandidateStatus status = candidateStatusRepository
+                        .findByCandidateAndInterviewProcess(candidate, interviewProcess)
+                        .orElseThrow(() -> new IllegalArgumentException("CandidateStatus not found for candidate and interview process"));
+
+                status.setCurrentStage(interviewStage);
+                candidateStatusRepository.save(status);
+            }
         }
 
         // Set the stage order and associate the stage with the process
@@ -332,6 +343,7 @@ public class InterviewProcessService {
         // Return the saved stage as a DTO
         return interviewStageMapper.interviewStageToInterviewStageDTO(savedStage);
     }
+
 
     @Transactional
     public void addCandidateToNextStage(UUID candidateId, UUID currentStageId , UUID processId) {
@@ -359,10 +371,23 @@ public class InterviewProcessService {
         InterviewStage nextStage = interviewStageRepository.findByInterviewProcessIdAndStageOrder(processId, nextStageOrder)
                 .orElseThrow(() -> new IllegalArgumentException("No next stage found for process with id: " + processId));
 
+        // Fetch or create the CandidateStatus for this candidate and process
+        CandidateStatus candidateStatus = candidate.getCandidateStatuses().stream()
+                .filter(status -> status.getInterviewProcess().getId().equals(processId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("No status found for candidate in process with id: " + processId));
+
+        // Update the candidate's current stage in the process
+        candidateStatus.setCurrentStage(nextStage);
+
+        // Update the candidate's status (if applicable)
+        candidateStatus.setStatus(CandidateProcessStatus.IN_PROGRESS);
+
         // Add the candidate to the next stage
         nextStage.getCandidates().add(candidate);
 
         // Persist the changes
+        candidateStatusRepository.save(candidateStatus);
         interviewStageRepository.save(nextStage);
 
         logger.info("Candidate {} added to stage {} in process {}", candidateId, nextStage.getStageOrder(), processId);
