@@ -10,6 +10,7 @@ import com.siemens.interviewTracker.exception.UserNotFoundException;
 import com.siemens.interviewTracker.mapper.CandidateMapper;
 import com.siemens.interviewTracker.mapper.InterviewStageMapper;
 import com.siemens.interviewTracker.repository.CandidateRepository;
+import com.siemens.interviewTracker.repository.CandidateStatusRepository;
 import com.siemens.interviewTracker.repository.InterviewStageRepository;
 
 import com.siemens.interviewTracker.dto.StageDetailsDTO;
@@ -44,6 +45,7 @@ public class InterviewProcessService {
     private final InterviewStageRepository interviewStageRepository;
     private final CandidateRepository candidateRepository;
     private final CandidateMapper candidateMapper;
+    private final CandidateStatusRepository candidateStatusRepository;
     private static final Logger logger = LoggerFactory.getLogger(InterviewProcessService.class);
 
 
@@ -55,7 +57,8 @@ public class InterviewProcessService {
             CandidateRepository candidateRepository,
             CandidateMapper candidateMapper,
             InterviewStageRepository interviewStageRepository,
-            InterviewStageMapper interviewStageMapper)
+            InterviewStageMapper interviewStageMapper ,
+            CandidateStatusRepository candidateStatusRepository)
     {
         this.validator = validator;
         this.interviewProcessMapper = interviewProcessMapper;
@@ -64,6 +67,7 @@ public class InterviewProcessService {
         this.candidateRepository = candidateRepository;
         this.interviewStageRepository = interviewStageRepository;
         this.interviewStageMapper = interviewStageMapper;
+        this.candidateStatusRepository = candidateStatusRepository;
     }
 
     public InterviewProcessDTO createInterviewProcess(InterviewProcessDTO interviewProcessDTO) {
@@ -214,6 +218,16 @@ public class InterviewProcessService {
         InterviewProcess interviewProcess = interviewProcessRepository.findById(processId)
                 .orElseThrow(() -> new IllegalArgumentException("InterviewProcess not found with id: " + processId));
 
+        // Create and set CandidateStatus
+        CandidateStatus candidateStatus = new CandidateStatus();
+        candidateStatus.setCandidate(candidate);
+        candidateStatus.setInterviewProcess(interviewProcess);
+        candidateStatus.setStatus(CandidateProcessStatus.IN_PROGRESS);
+
+        candidate.getCandidateStatuses().add(candidateStatus);
+        interviewProcess.getCandidateStatuses().add(candidateStatus);
+
+        candidateStatusRepository.save(candidateStatus); // Save the CandidateStatus
         // Add Candidate to InterviewProcess
         interviewProcess.getCandidates().add(candidate);
 
@@ -255,6 +269,18 @@ public class InterviewProcessService {
 
         // Add candidates to the process
         interviewProcess.getCandidates().addAll(candidates);
+
+        candidates.forEach(candidate -> {
+            // Create and set CandidateStatus for each candidate
+            CandidateStatus candidateStatus = new CandidateStatus();
+            candidateStatus.setCandidate(candidate);
+            candidateStatus.setInterviewProcess(interviewProcess);
+            candidateStatus.setStatus(CandidateProcessStatus.IN_PROGRESS);
+
+            candidate.getCandidateStatuses().add(candidateStatus);
+            interviewProcess.getCandidateStatuses().add(candidateStatus);
+            candidateStatusRepository.save(candidateStatus); // Save the CandidateStatus
+        });
 
         // Add the candidates to the first stage of the process, if it exists
         Pageable pageable = PageRequest.of(0, 1);  // Fetch the first stage only
