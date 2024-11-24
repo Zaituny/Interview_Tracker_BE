@@ -279,7 +279,7 @@ public class InterviewProcessService {
 
             candidate.getCandidateStatuses().add(candidateStatus);
             interviewProcess.getCandidateStatuses().add(candidateStatus);
-            candidateStatusRepository.save(candidateStatus); // Save the CandidateStatus
+            candidateStatusRepository.save(candidateStatus);
         });
 
         // Add the candidates to the first stage of the process, if it exists

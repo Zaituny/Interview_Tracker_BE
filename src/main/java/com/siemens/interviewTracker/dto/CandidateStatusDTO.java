@@ -11,5 +11,6 @@ import java.util.UUID;
 public class CandidateStatusDTO {
     private UUID id;
     private UUID candidateId;
+    private UUID interviewProcessId;
     private CandidateProcessStatus status;
 }
