@@ -24,6 +24,15 @@ public interface InterviewStageRepository extends JpaRepository<InterviewStage, 
     @Query("SELECT s FROM InterviewStage s WHERE s.interviewProcess.id = :processId AND s.stageOrder = :nextOrder")
     Optional<InterviewStage> findNextStage(@Param("processId") UUID processId, @Param("nextOrder") int nextOrder);
 
+    @Query("SELECT s FROM InterviewStage s WHERE s.interviewProcess.id = :processId AND s.stageOrder > :stageOrder ORDER BY s.stageOrder")
+    List<InterviewStage> findByInterviewProcessIdAndStageOrderGreaterThan(
+            @Param("processId") UUID processId,
+            @Param("stageOrder") Integer stageOrder);
+
+    @Query("SELECT s FROM InterviewStage s WHERE s.interviewProcess.id = :processId AND s.stageOrder = 1")
+    Optional<InterviewStage> findFirstStageByProcessId(@Param("processId") UUID processId);
+
+
 
     @Query("""
     SELECT new com.siemens.interviewTracker.dto.StageDetailsDTO(

@@ -10,6 +10,7 @@ import com.siemens.interviewTracker.exception.UserNotFoundException;
 import com.siemens.interviewTracker.mapper.CandidateMapper;
 import com.siemens.interviewTracker.mapper.InterviewStageMapper;
 import com.siemens.interviewTracker.repository.CandidateRepository;
+import com.siemens.interviewTracker.repository.CandidateStatusRepository;
 import com.siemens.interviewTracker.repository.InterviewStageRepository;
 
 import com.siemens.interviewTracker.dto.StageDetailsDTO;
@@ -28,6 +29,7 @@ import com.siemens.interviewTracker.dto.InterviewProcessDTO;
 import com.siemens.interviewTracker.mapper.InterviewProcessMapper;
 import com.siemens.interviewTracker.repository.InterviewProcessRepository;
 
+import static com.siemens.interviewTracker.entity.CandidateProcessStatus.*;
 import static com.siemens.interviewTracker.entity.InterviewProcessStatus.*;
 import static com.siemens.interviewTracker.utils.ValidationUtils.getValidationErrors;
 
@@ -40,7 +42,7 @@ public class InterviewProcessService {
 
     private final InterviewStageMapper interviewStageMapper;
     private final InterviewProcessRepository interviewProcessRepository;
-
+    private final CandidateStatusRepository candidateStatusRepository;
     private final InterviewStageRepository interviewStageRepository;
     private final CandidateRepository candidateRepository;
     private final CandidateMapper candidateMapper;
@@ -55,7 +57,8 @@ public class InterviewProcessService {
             CandidateRepository candidateRepository,
             CandidateMapper candidateMapper,
             InterviewStageRepository interviewStageRepository,
-            InterviewStageMapper interviewStageMapper)
+            InterviewStageMapper interviewStageMapper ,
+            CandidateStatusRepository candidateStatusRepository)
     {
         this.validator = validator;
         this.interviewProcessMapper = interviewProcessMapper;
@@ -64,6 +67,7 @@ public class InterviewProcessService {
         this.candidateRepository = candidateRepository;
         this.interviewStageRepository = interviewStageRepository;
         this.interviewStageMapper = interviewStageMapper;
+        this.candidateStatusRepository = candidateStatusRepository;
     }
 
     public InterviewProcessDTO createInterviewProcess(InterviewProcessDTO interviewProcessDTO) {
@@ -215,24 +219,34 @@ public class InterviewProcessService {
                 .orElseThrow(() -> new IllegalArgumentException("InterviewProcess not found with id: " + processId));
 
         // Add Candidate to InterviewProcess
-        interviewProcess.getCandidates().add(candidate);
+        if (!interviewProcess.getCandidates().contains(candidate)) {
+            interviewProcess.getCandidates().add(candidate);
+        }
+        if (!candidate.getInterviewProcesses().contains(interviewProcess)) {
+            candidate.getInterviewProcesses().add(interviewProcess);
+        }
 
-        // Add InterviewProcess to Candidate
-        candidate.getInterviewProcesses().add(interviewProcess);
 
         // Check for the first stage in the process
-
-        Pageable pageable = PageRequest.of(0, 1);  // Limit to the first result
-        List<InterviewStage> stages = interviewStageRepository.findStagesByInterviewProcessId(processId, pageable);
-        InterviewStage firstStage = stages.isEmpty() ? null : stages.get(0);
+        InterviewStage firstStage = interviewStageRepository.findFirstStageByProcessId(processId)
+                .orElse(null);
 
         if (firstStage != null) {
-            // Add Candidate to the first stage
-            firstStage.getCandidates().add(candidate);
-            candidate.getInterviewStages().add(firstStage);
+            if (!firstStage.getCandidates().contains(candidate)) {
+                firstStage.getCandidates().add(candidate);
+            }
+            if (!candidate.getInterviewStages().contains(firstStage)) {
+                candidate.getInterviewStages().add(firstStage);
+            }
             interviewStageRepository.save(firstStage); // Persist the change in the stage
         }
 
+        CandidateStatus status = new CandidateStatus();
+        status.setCandidate(candidate);
+        status.setInterviewProcess(interviewProcess);
+        status.setStatus(IN_PROGRESS);
+
+        candidateStatusRepository.save(status);
         // Save both entities to persist the relationship
         candidateRepository.save(candidate);
         interviewProcessRepository.save(interviewProcess);
@@ -257,9 +271,9 @@ public class InterviewProcessService {
         interviewProcess.getCandidates().addAll(candidates);
 
         // Add the candidates to the first stage of the process, if it exists
-        Pageable pageable = PageRequest.of(0, 1);  // Fetch the first stage only
-        List<InterviewStage> stages = interviewStageRepository.findStagesByInterviewProcessId(processId, pageable);
-        InterviewStage firstStage = stages.isEmpty() ? null : stages.get(0);
+        // Check for the first stage in the process
+        InterviewStage firstStage = interviewStageRepository.findFirstStageByProcessId(processId)
+                .orElse(null);
 
         if (firstStage != null) {
             candidates.forEach(candidate -> {
