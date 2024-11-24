@@ -56,8 +56,15 @@ public interface CandidateMapper {
                     dto.setCandidateId(candidateStatus.getCandidate().getId());
                     dto.setInterviewProcessId(candidateStatus.getInterviewProcess().getId());
                     dto.setStatus(candidateStatus.getStatus());
+
+                    // Map currentStage to currentStageId
+                    if (candidateStatus.getCurrentStage() != null) {
+                        dto.setCurrentStageId(candidateStatus.getCurrentStage().getId());
+                    }
+
                     return dto;
                 })
                 .collect(Collectors.toSet());
     }
+
 }

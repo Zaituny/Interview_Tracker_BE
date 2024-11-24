@@ -13,4 +13,5 @@ public class CandidateStatusDTO {
     private UUID candidateId;
     private UUID interviewProcessId;
     private CandidateProcessStatus status;
+    private UUID currentStageId;
 }

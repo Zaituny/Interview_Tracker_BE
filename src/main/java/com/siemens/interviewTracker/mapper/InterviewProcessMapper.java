@@ -60,6 +60,13 @@ public interface InterviewProcessMapper {
                     dto.setCandidateId(status.getCandidate().getId());
                     dto.setStatus(status.getStatus());
                     dto.setInterviewProcessId(status.getInterviewProcess().getId());
+                    dto.setStatus(status.getStatus());
+
+                    // Map currentStage to currentStageId
+                    if (status.getCurrentStage() != null) {
+                        dto.setCurrentStageId(status.getCurrentStage().getId());
+                    }
+
                     return dto;
                 })
                 .collect(Collectors.toSet());

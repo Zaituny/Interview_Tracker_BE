@@ -30,4 +30,8 @@ public class CandidateStatus {
     @Column(name = "status", nullable = false)
     private CandidateProcessStatus status;
 
+    @ManyToOne
+    @JoinColumn(name = "current_stage_id")
+    private InterviewStage currentStage;
+
 }
