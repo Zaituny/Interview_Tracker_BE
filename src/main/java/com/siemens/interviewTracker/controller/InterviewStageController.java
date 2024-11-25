@@ -114,4 +114,20 @@ public class InterviewStageController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @PutMapping("/{stageId}")
+    public ResponseEntity<Void> updateInterviewStage(@PathVariable UUID stageId,
+                                                     @RequestBody @Valid InterviewStageDTO updatedStageDTO) {
+        try {
+            interviewStageService.updateInterviewStage(stageId, updatedStageDTO);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            logger.error("Error updating interview stage: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            logger.error("Unexpected error occurred: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
 }

@@ -12,6 +12,8 @@ import com.siemens.interviewTracker.repository.CandidateRepository;
 import com.siemens.interviewTracker.repository.InterviewProcessRepository;
 import com.siemens.interviewTracker.repository.InterviewStageRepository;
 import com.siemens.interviewTracker.repository.UserRepository;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -22,7 +24,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+
+import static com.siemens.interviewTracker.utils.ValidationUtils.getValidationErrors;
 
 @Service
 @Transactional
@@ -37,16 +42,19 @@ public class InterviewStageService {
     private final CandidateRepository candidateRepository;
     private final UserRepository userRepository;
 
+    private final Validator validator;
+
     public InterviewStageService(InterviewProcessRepository interviewProcessRepository,
                                  InterviewStageRepository interviewStageRepository,
                                  InterviewStageMapper interviewStageMapper,
                                  CandidateRepository candidateRepository,
-                                 UserRepository userRepository) {
+                                 UserRepository userRepository, Validator validator) {
         this.interviewProcessRepository = interviewProcessRepository;
         this.interviewStageRepository = interviewStageRepository;
         this.interviewStageMapper = interviewStageMapper; // Initialize Mapper
         this.candidateRepository = candidateRepository;
         this.userRepository = userRepository;
+        this.validator = validator;
     }
 
     public Page<InterviewStageDTO> getAllInterviewStages(int limit, int offset) {
@@ -157,5 +165,51 @@ public class InterviewStageService {
 
         interviewStageRepository.save(interviewStage);
         logger.info("Added interviewers to stage with ID: {}", stageId);
+    }
+
+    @Transactional
+    public InterviewStageDTO updateInterviewStage(UUID stageId, InterviewStageDTO stageDTO) {
+        logger.debug("Updating interview stage with ID: {}", stageId);
+
+        if (stageDTO == null) {
+            throw new IllegalArgumentException("InterviewStageDTO cannot be null");
+        }
+
+        return interviewStageRepository.findById(stageId)
+                .map(existingStage -> {
+                    // Update fields only if provided in the DTO
+
+                    if (stageDTO.getName() != null) {
+                        Set<ConstraintViolation<InterviewStageDTO>> nameViolations = validator.validateProperty(stageDTO, "name");
+                        if (!nameViolations.isEmpty()) {
+                            throw new IllegalArgumentException("Validation errors in 'name': " + getValidationErrors(nameViolations));
+                        }
+                        existingStage.setName(stageDTO.getName());
+                    }
+
+
+                    if (stageDTO.getDescription() != null) {
+                        Set<ConstraintViolation<InterviewStageDTO>> descViolations = validator.validateProperty(stageDTO, "description");
+                        if (!descViolations.isEmpty()) {
+                            throw new IllegalArgumentException("Validation errors in 'description': " + getValidationErrors(descViolations));
+                        }
+                        existingStage.setDescription(stageDTO.getDescription());
+                    }
+
+                    if (stageDTO.getStatus() != null) {
+                        existingStage.setStatus(stageDTO.getStatus());
+                    }
+
+                    // Save updated stage
+                    InterviewStage updatedStage = interviewStageRepository.save(existingStage);
+                    logger.info("Interview stage with ID {} updated successfully", stageId);
+
+                    return updatedStage;
+                })
+                .map(interviewStageMapper::interviewStageToInterviewStageDTO)
+                .orElseThrow(() -> {
+                    logger.error("InterviewStage not found with ID: {}", stageId);
+                    return new IllegalArgumentException("InterviewStage with ID " + stageId + " not found");
+                });
     }
 }
