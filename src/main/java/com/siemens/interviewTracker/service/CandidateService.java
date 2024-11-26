@@ -16,7 +16,6 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,7 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.siemens.interviewTracker.utils.PasswordValidator.validateRawPassword;
 import static com.siemens.interviewTracker.utils.ValidationUtils.getValidationErrors;
 
 @Service
@@ -102,7 +100,7 @@ public class CandidateService {
         return candidateMapper.toDTO(candidate);
     }
 
-    public CandidateWithProcessesDTO getCandidateWithProcesses(UUID candidateId) {
+    public CandidateProfileDTO getCandidateWithProcesses(UUID candidateId) {
         Candidate candidate = candidateRepository.findById(candidateId)
                 .orElseThrow(() -> new IllegalArgumentException("Candidate not found"));
 
