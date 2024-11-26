@@ -515,4 +515,12 @@ public class InterviewProcessService {
         interviewProcessRepository.save(interviewProcess);
         logger.info("Candidate {} is accepted for the interview process ID {}", candidateId, interviewProcessId);
     }
+
+    public void completeInterviewProcess(UUID interviewProcessId){
+        logger.info("Fetching interview process with ID: {}", interviewProcessId);
+        InterviewProcess interviewProcess = interviewProcessRepository.findById(interviewProcessId)
+                .orElseThrow(() -> new IllegalArgumentException("InterviewProcess not found"));
+
+        interviewProcess.setStatus(COMPLETED);
+    }
 }
