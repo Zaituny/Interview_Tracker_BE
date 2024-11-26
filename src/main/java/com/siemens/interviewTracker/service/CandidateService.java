@@ -1,8 +1,8 @@
 package com.siemens.interviewTracker.service;
 
-import com.siemens.interviewTracker.dto.CandidateDTO;
-import com.siemens.interviewTracker.dto.InterviewProcessDTO;
+import com.siemens.interviewTracker.dto.*;
 import com.siemens.interviewTracker.entity.Candidate;
+import com.siemens.interviewTracker.entity.CandidateStatus;
 import com.siemens.interviewTracker.entity.InterviewProcess;
 import com.siemens.interviewTracker.entity.InterviewStage;
 import com.siemens.interviewTracker.exception.CandidateDeletionException;
@@ -20,13 +20,12 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.siemens.interviewTracker.utils.PasswordValidator.validateRawPassword;
 import static com.siemens.interviewTracker.utils.ValidationUtils.getValidationErrors;
@@ -103,6 +102,13 @@ public class CandidateService {
         return candidateMapper.toDTO(candidate);
     }
 
+    public CandidateWithProcessesDTO getCandidateWithProcesses(UUID candidateId) {
+        Candidate candidate = candidateRepository.findById(candidateId)
+                .orElseThrow(() -> new IllegalArgumentException("Candidate not found"));
+
+        return candidateMapper.toCandidateWithProcessesDTO(candidate);
+    }
+
     public CandidateDTO updateCandidate(UUID id, CandidateDTO candidateDTO) {
         logger.debug("Updating candidate with ID: {}", id);
         if (candidateDTO == null) {
@@ -173,57 +179,38 @@ public class CandidateService {
         logger.info("Candidate with ID: {} has been successfully deleted", id);
     }
 
-    @Transactional
-    public CandidateDTO createCandidateAndAddToProcess(CandidateDTO candidateDTO, UUID processId) {
-        try {
-            // Create new candidate from DTO
-            Candidate candidate = candidateMapper.toEntity(candidateDTO);
-
-            // Fetch InterviewProcess by processId
-            InterviewProcess interviewProcess = interviewProcessRepository.findById(processId)
-                    .orElseThrow(() -> new IllegalArgumentException("Interview process not found"));
-
-            // Add interview process to the candidate
-            candidate.getInterviewProcesses().add(interviewProcess);
-
-            Candidate savedCandidate = candidateRepository.save(candidate);
-
-            // Add candidate to the interview process
-            interviewProcess.getCandidates().add(savedCandidate);
-            interviewProcessRepository.save(interviewProcess);
-
-            // Convert saved candidate to DTO and return
-            return candidateMapper.toDTO(savedCandidate);
-
-        } catch (DataIntegrityViolationException ex) {
-            // Check for unique constraint violation
-            if (ex.getMessage().contains("email")) {
-                throw new DuplicateFieldException("email", candidateDTO.getEmail());
-            } else if (ex.getMessage().contains("phone")) {
-                throw new DuplicateFieldException("phone", candidateDTO.getPhone());
-            }
-            throw ex; // Re-throw for other exceptions
-        }
-    }
-
-    public Page<CandidateDTO> getCandidatesInInterviewProcess(UUID interviewProcessId, int limit, int offset) {
-        logger.debug("Fetching candidates for interview process with ID: {}. Limit: {}, Offset: {}", interviewProcessId, limit, offset);
-
-        if (limit < 1 || offset < 0) {
-            throw new IllegalArgumentException("Limit and offset must be greater than 0");
-        }
-
-        if (interviewProcessId == null) {
-            throw new IllegalArgumentException("Interview process id cannot be null");
-        }
-
+    public Page<CandidateInProcessDTO> getCandidatesInInterviewProcess(UUID interviewProcessId, int limit, int offset) {
         InterviewProcess interviewProcess = interviewProcessRepository.findById(interviewProcessId)
                 .orElseThrow(() -> new EntityNotFoundException("Interview process with ID " + interviewProcessId + " not found"));
 
         Pageable pageable = PageRequest.of(offset / limit, limit);
-        Page<Candidate> candidates = candidateRepository.findByInterviewProcessesContaining(interviewProcess, pageable);
 
-        return  candidates.map(candidateMapper::toDTO);
+        // Retrieve a page of candidates for the given interview process
+        Page<Candidate> candidatesPage = candidateRepository.findByInterviewProcessesContaining(interviewProcess, pageable);
+
+        // Map the candidates to CandidateInProcessDTO with custom logic
+        List<CandidateInProcessDTO> candidateInProcessDTOs = candidatesPage.getContent().stream()
+                .map(candidate -> {
+                    CandidateStatus status = candidate.getCandidateStatuses().stream()
+                            .filter(s -> s.getInterviewProcess().getId().equals(interviewProcess.getId()))
+                            .findFirst()
+                            .orElse(null);
+
+                    String statusInProcess = status != null ? status.getStatus().name() : "Not Assigned";
+                    String currentStageInProcess = (status != null && status.getCurrentStage() != null)
+                            ? status.getCurrentStage().getName()
+                            : "Not Assigned";
+
+                    return candidateMapper.toCandidateInProcessDTO(
+                            candidateMapper.toDTO(candidate),
+                            statusInProcess,
+                            currentStageInProcess
+                    );
+                })
+                .collect(Collectors.toList());
+
+        // Return a Page object with pagination details
+        return new PageImpl<>(candidateInProcessDTOs, pageable, candidatesPage.getTotalElements());
     }
 
     public Page<CandidateDTO> getCandidatesInInterviewStage(UUID interviewStageId, int limit, int offset) {

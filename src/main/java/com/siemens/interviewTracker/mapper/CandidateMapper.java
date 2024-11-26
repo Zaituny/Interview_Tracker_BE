@@ -1,15 +1,15 @@
 package com.siemens.interviewTracker.mapper;
 
-import com.siemens.interviewTracker.dto.CandidateStatusDTO;
+import com.siemens.interviewTracker.dto.*;
 import com.siemens.interviewTracker.entity.CandidateStatus;
 import com.siemens.interviewTracker.entity.InterviewProcess;
 import com.siemens.interviewTracker.entity.InterviewStage;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import com.siemens.interviewTracker.dto.CandidateDTO;
 import com.siemens.interviewTracker.entity.Candidate;
 import org.mapstruct.Named;
 
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -67,4 +67,27 @@ public interface CandidateMapper {
                 .collect(Collectors.toSet());
     }
 
+    @Mapping(target = "candidateId", source = "candidateDTO.id")
+    @Mapping(target = "statusInProcess", source = "statusInProcess")
+    @Mapping(target = "currentStageInProcess", source = "currentStageInProcess")
+    CandidateInProcessDTO toCandidateInProcessDTO(CandidateDTO candidateDTO, String statusInProcess, String currentStageInProcess);
+
+    @Mapping(target = "processes", source = "candidateStatuses", qualifiedByName = "mapCandidateStatusesToProcessDetailDTOs")
+    CandidateWithProcessesDTO toCandidateWithProcessesDTO(Candidate candidate);
+
+    @Named("mapCandidateStatusesToProcessDetailDTOs")
+    default List<ProcessDetailDTO> mapCandidateStatusesToProcessDetailDTOs(Set<CandidateStatus> candidateStatuses) {
+        if (candidateStatuses == null) {
+            return null;
+        }
+        return candidateStatuses.stream()
+                .map(status -> {
+                    ProcessDetailDTO dto = new ProcessDetailDTO();
+                    dto.setProcessId(status.getInterviewProcess().getId());
+                    dto.setProcessName(status.getInterviewProcess().getTitle());
+                    dto.setCandidateStatus(status.getStatus().name());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
 }

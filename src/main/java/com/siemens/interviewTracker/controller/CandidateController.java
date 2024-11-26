@@ -1,6 +1,8 @@
 package com.siemens.interviewTracker.controller;
 
 import com.siemens.interviewTracker.dto.CandidateDTO;
+import com.siemens.interviewTracker.dto.CandidateInProcessDTO;
+import com.siemens.interviewTracker.dto.CandidateWithProcessesDTO;
 import com.siemens.interviewTracker.service.CandidateService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -48,9 +50,9 @@ public class CandidateController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CandidateDTO> getCandidateById(@PathVariable UUID id) {
+    public ResponseEntity<CandidateWithProcessesDTO> getCandidateWithProcesses(@PathVariable UUID id) {
         logger.info("Fetching candidate with ID: {}", id);
-        CandidateDTO candidate = candidateService.getCandidateById(id);
+        CandidateWithProcessesDTO candidate = candidateService.getCandidateWithProcesses(id);
         return ResponseEntity.ok(candidate);
     }
 
@@ -68,13 +70,9 @@ public class CandidateController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/candidate/{processId}")
-    public CandidateDTO createCandidateAndAddToProcess(@RequestBody CandidateDTO candidateDTO, @PathVariable UUID processId) {
-        return candidateService.createCandidateAndAddToProcess(candidateDTO, processId);
-    }
 
     @GetMapping("/interview-process/{interviewProcessId}")
-    public ResponseEntity<Page<CandidateDTO>> getCandidatesByInterviewProcess(
+    public ResponseEntity<Page<CandidateInProcessDTO>> getCandidatesByInterviewProcess(
             @PathVariable UUID interviewProcessId,
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(defaultValue = "0") int offset) {
@@ -86,7 +84,7 @@ public class CandidateController {
             throw new IllegalArgumentException("Offset must be non-negative.");
         }
 
-        Page<CandidateDTO> candidates = candidateService.getCandidatesInInterviewProcess(interviewProcessId, limit, offset);
+        Page<CandidateInProcessDTO> candidates = candidateService.getCandidatesInInterviewProcess(interviewProcessId, limit, offset);
         return ResponseEntity.ok(candidates);
     }
 
