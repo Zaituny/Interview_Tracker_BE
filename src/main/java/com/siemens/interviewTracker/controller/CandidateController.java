@@ -49,10 +49,17 @@ public class CandidateController {
         return ResponseEntity.ok(candidates);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/profile/{id}")
     public ResponseEntity<CandidateWithProcessesDTO> getCandidateWithProcesses(@PathVariable UUID id) {
         logger.info("Fetching candidate with ID: {}", id);
         CandidateWithProcessesDTO candidate = candidateService.getCandidateWithProcesses(id);
+        return ResponseEntity.ok(candidate);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<CandidateDTO> getCandidate(@PathVariable UUID id) {
+        logger.info("Fetching candidate with ID: {}", id);
+        CandidateDTO candidate = candidateService.getCandidateById(id);
         return ResponseEntity.ok(candidate);
     }
 
