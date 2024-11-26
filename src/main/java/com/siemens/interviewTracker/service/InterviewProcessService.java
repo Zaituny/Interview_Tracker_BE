@@ -111,7 +111,6 @@ public class InterviewProcessService {
         throw new RuntimeException("User email not found in the security context");
     }
 
-
     public Page<InterviewProcessDTO> getAllInterviewProcesses(int limit, int offset) {
         logger.debug("Fetching all interview processes with limit: {}, offset: {}", limit, offset);
 

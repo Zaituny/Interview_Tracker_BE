@@ -79,13 +79,6 @@ public class InterviewProcessController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/{processId}/candidate")
-    public ResponseEntity<String> addCandidateToProcess(@RequestParam UUID candidateId, @RequestParam UUID processId) {
-        logger.info("adding candidate with ID: {}", candidateId);
-        interviewProcessService.addCandidateToProcess(candidateId, processId);
-        return ResponseEntity.ok("Candidate added to process successfully.");
-    }
-
 
     @PostMapping("/{processId}/stages")
     public ResponseEntity<InterviewStageDTO> addStageToProcess(@Valid @RequestBody InterviewStageDTO interviewStageDTO) {
@@ -116,8 +109,8 @@ public class InterviewProcessController {
         }
     }
 
-    @PostMapping("/{processId}/candidates")
-    public ResponseEntity<String> addBulkCandidatesToProcess(
+    @PostMapping("/{processId}/candidate")
+    public ResponseEntity<String> addCandidatesToProcess(
             @PathVariable UUID processId,
             @RequestBody List<UUID> candidateIds) {
         try {
