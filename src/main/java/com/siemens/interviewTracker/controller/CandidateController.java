@@ -2,7 +2,7 @@ package com.siemens.interviewTracker.controller;
 
 import com.siemens.interviewTracker.dto.CandidateDTO;
 import com.siemens.interviewTracker.dto.CandidateInProcessDTO;
-import com.siemens.interviewTracker.dto.CandidateWithProcessesDTO;
+import com.siemens.interviewTracker.dto.CandidateProfileDTO;
 import com.siemens.interviewTracker.service.CandidateService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -50,9 +50,9 @@ public class CandidateController {
     }
 
     @GetMapping("/profile/{id}")
-    public ResponseEntity<CandidateWithProcessesDTO> getCandidateWithProcesses(@PathVariable UUID id) {
+    public ResponseEntity<CandidateProfileDTO> getCandidateWithProcesses(@PathVariable UUID id) {
         logger.info("Fetching candidate with ID: {}", id);
-        CandidateWithProcessesDTO candidate = candidateService.getCandidateWithProcesses(id);
+        CandidateProfileDTO candidate = candidateService.getCandidateWithProcesses(id);
         return ResponseEntity.ok(candidate);
     }
 

@@ -73,7 +73,7 @@ public interface CandidateMapper {
     CandidateInProcessDTO toCandidateInProcessDTO(CandidateDTO candidateDTO, String statusInProcess, String currentStageInProcess);
 
     @Mapping(target = "processes", source = "candidateStatuses", qualifiedByName = "mapCandidateStatusesToProcessDetailDTOs")
-    CandidateWithProcessesDTO toCandidateWithProcessesDTO(Candidate candidate);
+    CandidateProfileDTO toCandidateWithProcessesDTO(Candidate candidate);
 
     @Named("mapCandidateStatusesToProcessDetailDTOs")
     default List<ProcessDetailDTO> mapCandidateStatusesToProcessDetailDTOs(Set<CandidateStatus> candidateStatuses) {

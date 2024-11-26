@@ -8,7 +8,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
-public class CandidateWithProcessesDTO {
+public class CandidateProfileDTO {
     private UUID id;
     private String email;
     private String name;
