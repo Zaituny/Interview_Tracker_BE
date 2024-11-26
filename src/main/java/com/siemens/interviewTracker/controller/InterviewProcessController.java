@@ -198,4 +198,11 @@ public class InterviewProcessController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred.");
         }
     }
+
+    @PostMapping("/{interviewProcessId}/complete")
+    public ResponseEntity<String> completeInterviewProcess(UUID id) {
+        logger.info("Completing interview process with ID: {}", id);
+        interviewProcessService.completeInterviewProcess(id);
+        return ResponseEntity.ok("Interview Process completed successfully");
+    }
 }
