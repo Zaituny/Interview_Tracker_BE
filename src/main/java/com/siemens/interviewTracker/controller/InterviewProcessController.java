@@ -81,9 +81,9 @@ public class InterviewProcessController {
 
 
     @PostMapping("/{processId}/stages")
-    public ResponseEntity<InterviewStageDTO> addStageToProcess(@Valid @RequestBody InterviewStageDTO interviewStageDTO) {
+    public ResponseEntity<InterviewStageDTO> addStageToProcess(@PathVariable UUID processId , @Valid @RequestBody InterviewStageDTO interviewStageDTO) {
         try {
-            InterviewStageDTO createdStage = interviewProcessService.addStageToProcess(interviewStageDTO);
+            InterviewStageDTO createdStage = interviewProcessService.addStageToProcess(interviewStageDTO , processId);
             return new ResponseEntity<>(createdStage, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
             logger.error("Error adding stage to process: {}", e.getMessage());

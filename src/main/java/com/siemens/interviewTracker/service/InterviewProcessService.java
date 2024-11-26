@@ -307,10 +307,10 @@ public class InterviewProcessService {
         logger.info("Bulk candidates added to process ID: {}", processId);
     }
 
-    public InterviewStageDTO addStageToProcess(InterviewStageDTO interviewStageDTO) {
+    public InterviewStageDTO addStageToProcess(InterviewStageDTO interviewStageDTO , UUID processId) {
         // Validate that the process exists using the processId from the DTO
-        InterviewProcess interviewProcess = interviewProcessRepository.findById(interviewStageDTO.getInterviewProcessId())
-                .orElseThrow(() -> new IllegalArgumentException("InterviewProcess with ID " + interviewStageDTO.getInterviewProcessId() + " not found"));
+        InterviewProcess interviewProcess = interviewProcessRepository.findById(processId)
+                .orElseThrow(() -> new IllegalArgumentException("InterviewProcess with ID " + processId + " not found"));
 
         // Calculate the next stage order for the process
         int nextStageOrder = interviewStageRepository
