@@ -39,6 +39,7 @@ public interface InterviewStageRepository extends JpaRepository<InterviewStage, 
         s.id,
         s.status,
         s.stageOrder,
+        s.description,
         SIZE(s.candidates),
         SIZE(s.interviewers)
     )

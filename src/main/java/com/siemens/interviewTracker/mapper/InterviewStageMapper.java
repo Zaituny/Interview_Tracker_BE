@@ -8,6 +8,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -45,4 +46,5 @@ public interface InterviewStageMapper {
                 .collect(Collectors.toSet());
     }
 
+    List<InterviewStageDTO> mapStagesToStageDTOs(List<InterviewStage> interviewStages);
 }
