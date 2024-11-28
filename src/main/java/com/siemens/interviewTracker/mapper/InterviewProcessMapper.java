@@ -71,4 +71,5 @@ public interface InterviewProcessMapper {
                 })
                 .collect(Collectors.toSet());
     }
+
 }
