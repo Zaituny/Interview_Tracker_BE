@@ -43,6 +43,7 @@ public class InterviewProcessService {
     private final InterviewStageMapper interviewStageMapper;
     private final InterviewProcessRepository interviewProcessRepository;
 
+    private final InterviewStageService interviewStageService;
     private final InterviewStageRepository interviewStageRepository;
     private final CandidateRepository candidateRepository;
     private final CandidateMapper candidateMapper;
@@ -57,6 +58,7 @@ public class InterviewProcessService {
             InterviewProcessRepository interviewProcessRepository,
             CandidateRepository candidateRepository,
             CandidateMapper candidateMapper,
+            InterviewStageService interviewStageService,
             InterviewStageRepository interviewStageRepository,
             InterviewStageMapper interviewStageMapper ,
             CandidateStatusRepository candidateStatusRepository)
@@ -66,6 +68,7 @@ public class InterviewProcessService {
         this.interviewProcessRepository = interviewProcessRepository;
         this.candidateMapper = candidateMapper;
         this.candidateRepository = candidateRepository;
+        this.interviewStageService = interviewStageService;
         this.interviewStageRepository = interviewStageRepository;
         this.interviewStageMapper = interviewStageMapper;
         this.candidateStatusRepository = candidateStatusRepository;
@@ -186,7 +189,6 @@ public class InterviewProcessService {
             throw new IllegalArgumentException("Process ID cannot be null");
         }
 
-        // Check if process ID exists
         if (!interviewProcessRepository.existsById(processId)) {
             logger.warn("Process with ID: {} not found", processId);
             throw new IllegalArgumentException("Process with the given ID does not exist");
@@ -197,10 +199,15 @@ public class InterviewProcessService {
 
             if (stageDetails.isEmpty()) {
                 logger.warn("No stages found for process ID: {}", processId);
-            } else {
-                logger.info("Retrieved {} stages for process ID: {}", stageDetails.size(), processId);
+                return stageDetails;
             }
 
+            stageDetails.forEach(dto -> {
+                long activeCount = interviewStageService.getActiveCandidateCountInStage(dto.getStageId());
+                dto.setNumberOfCandidates(activeCount);
+            });
+
+            logger.info("Retrieved {} stages for process ID: {}", stageDetails.size(), processId);
             return stageDetails;
 
         } catch (Exception e) {
