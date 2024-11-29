@@ -528,6 +528,15 @@ public class InterviewProcessService {
         InterviewProcess interviewProcess = interviewProcessRepository.findById(interviewProcessId)
                 .orElseThrow(() -> new IllegalArgumentException("InterviewProcess not found"));
 
+        interviewProcess.getCandidateStatuses().forEach(candidateStatus -> {
+            if (candidateStatus.getStatus() == CandidateProcessStatus.IN_PROGRESS) {
+                candidateStatus.setStatus(CandidateProcessStatus.REJECTED);
+                logger.info("Marked candidate '{}' as REJECTED", candidateStatus.getCandidate().getId());
+            }
+        });
+
         interviewProcess.setStatus(COMPLETED);
+        interviewProcessRepository.save(interviewProcess);
+        logger.info("Interview process with ID '{}' is now marked as COMPLETED", interviewProcessId);
     }
 }
