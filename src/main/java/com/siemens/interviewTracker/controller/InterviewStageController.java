@@ -54,10 +54,10 @@ public class InterviewStageController {
         }
     }
 
-    @GetMapping("/{interviewStageId}/candidates-count")
+    @GetMapping("/{interviewStageId}/active-candidates-count")
     public ResponseEntity<Long> getCandidateCount(@PathVariable UUID interviewStageId) {
         try {
-            long count = interviewStageService.getCandidateCountInStage(interviewStageId);
+            long count = interviewStageService.getActiveCandidateCountInStage(interviewStageId);
             return ResponseEntity.ok(count);
         } catch (IllegalArgumentException e) {
             logger.error("Error fetching candidate count: {}", e.getMessage());

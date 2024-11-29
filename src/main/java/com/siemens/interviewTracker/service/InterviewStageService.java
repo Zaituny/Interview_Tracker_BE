@@ -2,10 +2,7 @@ package com.siemens.interviewTracker.service;
 
 import com.siemens.interviewTracker.dto.InterviewProcessDTO;
 import com.siemens.interviewTracker.dto.InterviewStageDTO;
-import com.siemens.interviewTracker.entity.Candidate;
-import com.siemens.interviewTracker.entity.InterviewProcess;
-import com.siemens.interviewTracker.entity.InterviewStage;
-import com.siemens.interviewTracker.entity.User;
+import com.siemens.interviewTracker.entity.*;
 import com.siemens.interviewTracker.exception.UserNotFoundException;
 import com.siemens.interviewTracker.mapper.InterviewStageMapper;
 import com.siemens.interviewTracker.repository.CandidateRepository;
@@ -84,12 +81,26 @@ public class InterviewStageService {
         logger.info("Added candidate '{}' to stage '{}'", candidate.getName(), interviewStage.getName());
     }
 
-    public long getCandidateCountInStage(UUID interviewStageId) {
+    public long getActiveCandidateCountInStage(UUID interviewStageId) {
         logger.info("Fetching candidate count for interview stage ID: {}", interviewStageId);
         InterviewStage interviewStage = interviewStageRepository.findById(interviewStageId)
                 .orElseThrow(() -> new IllegalArgumentException("InterviewStage with ID " + interviewStageId + " not found"));
 
-        long candidateCount = interviewStage.getCandidates().size();
+        int currentStageOrder = interviewStage.getStageOrder();
+
+        long candidateCount = interviewStage.getCandidates().stream()
+                .filter(candidate -> interviewStage.getInterviewProcess()
+                        .getCandidateStatuses()
+                        .stream()
+                        .anyMatch(status -> status.getCandidate().equals(candidate)
+                                && status.getStatus() == CandidateProcessStatus.IN_PROGRESS
+                                && interviewStage.getInterviewProcess()
+                                .getInterviewStages()
+                                .stream()
+                                .filter(stage -> stage.getStageOrder() > currentStageOrder)
+                                .noneMatch(higherStage -> higherStage.getCandidates().contains(candidate))))
+                .count();
+
         logger.info("Candidate count for stage '{}': {}", interviewStage.getName(), candidateCount);
         return candidateCount;
     }
